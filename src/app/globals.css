@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #000000;
+
+  /* Brand Colors - TruVade */
+  --primary-green: #0B3D2C;
+  --primary-green-light: #0F5240;
+  --primary-green-dark: #072820;
+  --primary-bronze: #B87333;
+  --primary-bronze-light: #CA8E56;
+  --primary-bronze-dark: #A06328;
+
+  /* Semantic Colors */
+  --success: #10B981;
+  --warning: #F59E0B;
+  --error: #EF4444;
+  --info: #3B82F6;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  /* Brand Colors */
+  --color-primary: var(--primary-green);
+  --color-primary-light: var(--primary-green-light);
+  --color-primary-dark: var(--primary-green-dark);
+  --color-accent: var(--primary-bronze);
+  --color-accent-light: var(--primary-bronze-light);
+  --color-accent-dark: var(--primary-bronze-dark);
+
+  /* Semantic Colors */
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
+
+  /* Button radius */
+  --radius-button: 12px;
+
+  /* Fonts */
+  --font-sans: var(--font-manrope);
+  --font-serif: var(--font-manrope);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-manrope), system-ui, -apple-system, sans-serif;
+}
+
+/* Leaflet Map Popup Styling */
+.leaflet-popup-content-wrapper {
+  background: white !important;
+  border-radius: 12px !important;
+  padding: 0 !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  width: auto !important;
+}
+
+.leaflet-popup-tip {
+  background: white !important;
+}
+
+.leaflet-popup-close-button {
+  color: #000 !important;
+  font-size: 20px !important;
+  padding: 4px 8px !important;
+  right: 4px !important;
+  top: 4px !important;
+  z-index: 10;
+  background: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.leaflet-popup-close-button:hover {
+  color: #000 !important;
+  background: #f3f4f6;
+}
+
+/* Safe area insets for iOS devices */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
