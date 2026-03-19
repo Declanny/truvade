@@ -17,7 +17,7 @@ export const MobileBottomNav = () => {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
-    if (href === "/") return pathname === "/" || pathname.startsWith("/properties");
+    if (href === "/") return pathname === "/" || pathname.startsWith("/shortlets") || pathname.startsWith("/properties");
     return pathname.startsWith(href);
   };
 

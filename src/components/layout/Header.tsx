@@ -1,317 +1,381 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, Globe, User, Search, MapPinHouse, Hotel, TreePalm } from "lucide-react";
+import { Search, X, ChevronDown, MapPinHouse, Home } from "lucide-react";
 import Logo from "../ui/Logo";
 
-const categories = [
-  { key: "shortlets", label: "Shortlets", icon: MapPinHouse },
-  { key: "hotels", label: "Hotels", icon: Hotel },
-  { key: "experiences", label: "Experiences", icon: TreePalm },
+const navLinks = [
+  { href: "/shortlets", label: "Shortlets", icon: MapPinHouse, soon: false },
 ] as const;
 
 export const Header: React.FC = () => {
+  const pathname = usePathname();
+  const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [pastBanner, setPastBanner] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [desktopQuery, setDesktopQuery] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [activeCategory, setActiveCategory] = useState("shortlets");
-  const searchRef = useRef<HTMLDivElement>(null);
+  const isHome = pathname === "/";
   const menuRef = useRef<HTMLDivElement>(null);
-  const scrollYOnOpen = useRef(0);
-  const justOpened = useRef(false);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const showExpanded = !isScrolled || searchOpen;
-
-  // Scroll handler
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-      if (searchOpen && !justOpened.current && Math.abs(window.scrollY - scrollYOnOpen.current) > 30) {
-        setSearchOpen(false);
-      }
-      setMenuOpen(false);
+    const onScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+      setPastBanner(window.scrollY > 300);
     };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [searchOpen]);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
-  // Click outside handler
-  useEffect(() => {
-    if (!searchOpen) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
-        setSearchOpen(false);
-      }
-    };
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, [searchOpen]);
-
-  // Click outside handler for menu
+  // Close menu on outside click
   useEffect(() => {
     if (!menuOpen) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Node;
+      const inDesktop = menuRef.current?.contains(target);
+      const inMobile = mobileMenuRef.current?.contains(target);
+      if (!inDesktop && !inMobile) setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOpen]);
+
+  // Focus search input when opened (mobile only now)
+  useEffect(() => {
+    if (searchOpen) searchInputRef.current?.focus();
+  }, [searchOpen]);
+
+  // Escape closes overlays
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSearchOpen(false);
         setMenuOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [menuOpen]);
-
-  // Escape key handler for menu
-  useEffect(() => {
-    if (!menuOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMenuOpen(false);
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [menuOpen]);
-
-  const handlePillClick = useCallback(() => {
-    justOpened.current = true;
-    setSearchOpen(true);
-    setMenuOpen(false);
-    requestAnimationFrame(() => {
-      scrollYOnOpen.current = window.scrollY;
-      justOpened.current = false;
-    });
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
   }, []);
 
   return (
-    <motion.header
-      ref={searchRef}
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.6 }}
-      className={`sticky top-0 z-50 transition-shadow duration-300 bg-white ${
-        isScrolled && !searchOpen ? "shadow-sm" : ""
-      }`}
-    >
-      <div className="max-w-[1760px] mx-auto px-3 sm:px-5 lg:px-10">
-        {/* Top row */}
-        <div className="relative flex justify-between items-center h-20">
-          {/* Logo */}
-          <Link href="/" className="shrink-0">
-            <motion.div whileHover={{ scale: 1.02 }} className="cursor-pointer">
+    <>
+      <header
+        className={`sticky top-0 z-50 bg-white transition-shadow duration-200 ${
+          isScrolled ? "shadow-[0_1px_3px_rgba(0,0,0,0.08)]" : ""
+        }`}
+      >
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-[68px]">
+            {/* Logo */}
+            <Link href="/" className="shrink-0">
               <Logo variant="dark" size="lg" />
-            </motion.div>
-          </Link>
-
-          {/* Center — Category tabs (desktop, expanded) */}
-          {showExpanded && (
-            <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center gap-1">
-              {categories.map(({ key, label, icon: Icon }) => (
-                <button
-                  key={key}
-                  onClick={() => setActiveCategory(key)}
-                  className={`relative flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-full transition-colors cursor-pointer ${
-                    activeCategory === key
-                      ? "text-gray-900"
-                      : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  {label}
-                  {activeCategory === key && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute bottom-0 left-3 right-3 h-0.5 bg-gray-900 rounded-full"
-                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                    />
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Center — Collapsed pill (desktop, when scrolled & search not open) */}
-          {!showExpanded && (
-            <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key="collapsed"
-                  initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: -10 }}
-                  transition={{ duration: 0.25 }}
-                >
-                  <button
-                    onClick={handlePillClick}
-                    className="flex items-center gap-4 px-6 py-2.5 border border-gray-300 rounded-full hover:shadow-md transition-all cursor-pointer"
-                  >
-                    <span className="text-sm font-medium text-gray-800">Anywhere in Africa</span>
-                    <span className="w-px h-5 bg-gray-300" />
-                    <span className="text-sm font-medium text-gray-800">Anytime</span>
-                    <span className="w-px h-5 bg-gray-300" />
-                    <span className="text-sm text-gray-500">Add guests</span>
-                    <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center">
-                      <Search className="w-4 h-4 text-white" />
-                    </div>
-                  </button>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          )}
-
-          {/* Center — Mobile pill (always visible on mobile) */}
-          <div className="flex lg:hidden">
-            <Link href="/properties">
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                className="flex items-center gap-3 px-4 py-2 border border-gray-300 rounded-full hover:shadow-md transition-all cursor-pointer"
-              >
-                <Search className="w-4 h-4 text-gray-600" />
-                <div className="flex flex-col">
-                  <span className="text-xs font-medium text-gray-800 leading-tight">Anywhere in Africa</span>
-                  <span className="text-[11px] text-gray-500 leading-tight">Anytime · Add guests</span>
-                </div>
-              </motion.div>
-            </Link>
-          </div>
-
-          {/* Right actions */}
-          <div className="flex items-center gap-2 shrink-0">
-            <Link href="/owner" className="hidden md:block">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                className="text-sm font-semibold text-gray-800 px-4 py-2 rounded-full hover:bg-gray-100 transition-colors"
-              >
-                List your property
-              </motion.button>
             </Link>
 
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              title="Language & currency"
-              className="p-3 rounded-full hover:bg-gray-100 transition-colors"
-            >
-              <Globe className="w-5 h-5 text-gray-700" />
-            </motion.button>
-
-            <div ref={menuRef} className="relative">
-              <button
-                onClick={() => {
-                  setMenuOpen((prev) => !prev);
-                  setSearchOpen(false);
-                }}
-                aria-expanded={menuOpen}
-                aria-haspopup="true"
-                className={`flex items-center gap-3 px-3 py-2 border border-gray-300 rounded-full transition-all cursor-pointer ${
-                  menuOpen ? "shadow-md" : "hover:shadow-md"
+            {/* Desktop search bar — appears when scrolled past hero banner on homepage */}
+            {isHome && (
+              <div
+                className={`hidden lg:block flex-1 max-w-xl mx-8 transition-all duration-300 ${
+                  pastBanner ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none"
                 }`}
               >
-                <Menu className="w-4 h-4 text-gray-700" />
-                <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: "#0B3D2C" }}>
-                  <User className="w-5 h-5 text-white" />
-                </div>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (desktopQuery.trim()) {
+                      router.push(`/shortlets?q=${encodeURIComponent(desktopQuery.trim())}`);
+                      setDesktopQuery("");
+                    }
+                  }}
+                  className="flex items-center bg-gray-50 rounded-full px-4 py-2 border border-gray-200 focus-within:border-[#0B3D2C]/40 transition-colors"
+                >
+                  <Search className="w-4 h-4 text-gray-400 shrink-0" />
+                  <input
+                    type="text"
+                    value={desktopQuery}
+                    onChange={(e) => setDesktopQuery(e.target.value)}
+                    placeholder="Search city or property..."
+                    className="flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 outline-none ml-2.5"
+                  />
+                  {desktopQuery.trim() && (
+                    <button
+                      type="submit"
+                      className="px-3 py-1 bg-[#0B3D2C] text-white text-xs font-medium rounded-full hover:bg-[#0B3D2C]/90 transition-colors"
+                    >
+                      Search
+                    </button>
+                  )}
+                </form>
+              </div>
+            )}
+
+            {/* Desktop right group */}
+            <div className="hidden lg:flex items-center gap-6">
+              {/* Switch to Host */}
+              <Link
+                href="/owner"
+                className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                <Home className="w-4 h-4" />
+                Switch to Host
+              </Link>
+
+              {/* Divider */}
+              <div className="h-5 w-px bg-gray-200" />
+
+              {/* Nav links */}
+              <nav className="flex items-center gap-1">
+                {navLinks.map((link) => {
+                  const active = pathname === link.href || (link.href === "/shortlets" && pathname.startsWith("/shortlets"));
+                  return (
+                    <Link
+                      key={link.label}
+                      href={link.href}
+                      className={`relative flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                        active
+                          ? "text-[#0B3D2C] bg-[#0B3D2C]/5"
+                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                      }`}
+                    >
+                      <link.icon className="w-5 h-5" />
+                      {link.label}
+                      {link.soon && (
+                        <span className="ml-1.5 text-[10px] font-semibold text-[#0B3D2C]/60 bg-[#0B3D2C]/8 px-1.5 py-0.5 rounded">
+                          Soon
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </nav>
+
+              {/* Divider */}
+              <div className="h-5 w-px bg-gray-200" />
+
+              {/* Auth menu */}
+              <div ref={menuRef} className="relative">
+                <button
+                  onClick={() => { setMenuOpen((v) => !v); }}
+                  className={`flex items-center gap-2 pl-3 pr-2 py-2 rounded-lg border transition-all ${
+                    menuOpen
+                      ? "border-[#0B3D2C]/30 bg-[#0B3D2C]/5"
+                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  <div className="w-7 h-7 rounded-full bg-[#0B3D2C] flex items-center justify-center">
+                    <span className="text-white text-xs font-semibold">G</span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">Guest</span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-gray-500 transition-transform ${menuOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                <AnimatePresence>
+                  {menuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 6 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50"
+                    >
+                      <Link
+                        href="/signup"
+                        onClick={() => setMenuOpen(false)}
+                        className="block px-4 py-2.5 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition-colors"
+                      >
+                        Sign up
+                      </Link>
+                      <Link
+                        href="/login"
+                        onClick={() => setMenuOpen(false)}
+                        className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        Log in
+                      </Link>
+                      <div className="my-1.5 border-t border-gray-100" />
+                      <Link
+                        href="/owner"
+                        onClick={() => setMenuOpen(false)}
+                        className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        List your property
+                      </Link>
+                      <Link
+                        href="#"
+                        onClick={() => setMenuOpen(false)}
+                        className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        Help Center
+                      </Link>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* Mobile right actions */}
+            <div className="flex lg:hidden items-center gap-2">
+              {/* Search toggle — mobile only */}
+              <button
+                onClick={() => { setSearchOpen((v) => !v); setMenuOpen(false); }}
+                className={`p-2.5 rounded-lg transition-colors ${
+                  searchOpen ? "bg-[#0B3D2C]/5 text-[#0B3D2C]" : "text-gray-600 hover:bg-gray-50"
+                }`}
+                aria-label="Search"
+              >
+                {searchOpen ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
               </button>
 
-              <AnimatePresence>
-                {menuOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: -4 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: -4 }}
-                    transition={{ duration: 0.15 }}
-                    role="menu"
-                    className="absolute right-0 top-full mt-2 w-60 rounded-xl bg-white shadow-lg border border-gray-200 py-2 z-50"
-                  >
-                    <Link
-                      href="/signup"
-                      role="menuitem"
-                      onClick={() => setMenuOpen(false)}
-                      className="block px-4 py-3 text-sm font-semibold text-gray-800 hover:bg-gray-100 transition-colors"
+              {/* Auth menu — mobile */}
+              <div ref={mobileMenuRef} className="relative lg:hidden">
+                <button
+                  onClick={() => { setMenuOpen((v) => !v); setSearchOpen(false); }}
+                  className={`flex items-center gap-2 pl-3 pr-2 py-2 rounded-lg border transition-all ${
+                    menuOpen
+                      ? "border-[#0B3D2C]/30 bg-[#0B3D2C]/5"
+                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  <div className="w-7 h-7 rounded-full bg-[#0B3D2C] flex items-center justify-center">
+                    <span className="text-white text-xs font-semibold">G</span>
+                  </div>
+                  <ChevronDown className={`w-3.5 h-3.5 text-gray-500 transition-transform ${menuOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                <AnimatePresence>
+                  {menuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 6 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50"
                     >
-                      Sign up
-                    </Link>
-                    <Link
-                      href="/login"
-                      role="menuitem"
-                      onClick={() => setMenuOpen(false)}
-                      className="block px-4 py-3 text-sm text-gray-800 hover:bg-gray-100 transition-colors"
-                    >
-                      Log in
-                    </Link>
-                    <div className="my-1 border-t border-gray-200" />
-                    <Link
-                      href="/owner"
-                      role="menuitem"
-                      onClick={() => setMenuOpen(false)}
-                      className="block px-4 py-3 text-sm text-gray-800 hover:bg-gray-100 transition-colors"
-                    >
-                      List your property
-                    </Link>
-                    <Link
-                      href="#"
-                      role="menuitem"
-                      onClick={() => setMenuOpen(false)}
-                      className="block px-4 py-3 text-sm text-gray-800 hover:bg-gray-100 transition-colors"
-                    >
-                      Help Center
-                    </Link>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                      <Link
+                        href="/signup"
+                        onClick={() => setMenuOpen(false)}
+                        className="block px-4 py-2.5 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition-colors"
+                      >
+                        Sign up
+                      </Link>
+                      <Link
+                        href="/login"
+                        onClick={() => setMenuOpen(false)}
+                        className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        Log in
+                      </Link>
+                      <div className="my-1.5 border-t border-gray-100" />
+                      <Link
+                        href="/owner"
+                        onClick={() => setMenuOpen(false)}
+                        className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        List your property
+                      </Link>
+                      <Link
+                        href="#"
+                        onClick={() => setMenuOpen(false)}
+                        className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        Help Center
+                      </Link>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Expanded search bar (desktop only) */}
-        <div className="hidden lg:block">
+        {/* Search bar — mobile only, slides down */}
+        <div className="lg:hidden">
           <AnimatePresence>
-            {showExpanded && (
+            {searchOpen && (
               <motion.div
-                key="expanded"
-                initial={{ opacity: 0, scale: 0.92, y: -20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.92, y: -20 }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
-                className="flex justify-center pb-5"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="overflow-hidden border-t border-gray-100"
               >
-                <Link href="/properties" className="w-full max-w-[720px]">
-                  <div className="flex items-center w-full border border-gray-300 rounded-full shadow-sm hover:shadow-md transition-shadow bg-white">
-                    {/* Where */}
-                    <div className="flex-1 px-6 py-3 rounded-l-full hover:bg-gray-50 transition-colors cursor-pointer">
-                      <div className="text-xs font-semibold text-gray-800">Where</div>
-                      <div className="text-sm text-gray-500">Search destinations</div>
-                    </div>
-
-                    <div className="w-px h-10 bg-gray-200" />
-
-                    {/* When */}
-                    <div className="flex-1 px-6 py-3 hover:bg-gray-50 transition-colors cursor-pointer">
-                      <div className="text-xs font-semibold text-gray-800">When</div>
-                      <div className="text-sm text-gray-500">Add dates</div>
-                    </div>
-
-                    <div className="w-px h-10 bg-gray-200" />
-
-                    {/* Who */}
-                    <div className="flex-[0.8] px-6 py-3 hover:bg-gray-50 transition-colors cursor-pointer">
-                      <div className="text-xs font-semibold text-gray-800">Who</div>
-                      <div className="text-sm text-gray-500">Add guests</div>
-                    </div>
-
-                    {/* Search button */}
-                    <div className="pr-2">
-                      <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center hover:brightness-110 transition-all">
-                        <Search className="w-5 h-5 text-white" />
+                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-4">
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (searchQuery.trim()) {
+                        router.push(`/shortlets?q=${encodeURIComponent(searchQuery.trim())}`);
+                        setSearchOpen(false);
+                        setSearchQuery("");
+                      }
+                    }}
+                    className="flex items-center gap-3 max-w-2xl mx-auto bg-gray-50 rounded-xl px-4 py-3 border border-gray-200 focus-within:border-[#0B3D2C]/30 transition-colors"
+                  >
+                    <Search className="w-5 h-5 text-gray-400 shrink-0" />
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search by city, neighborhood, or property name"
+                      className="flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 outline-none"
+                    />
+                    {searchQuery.trim() && (
+                      <button
+                        type="submit"
+                        className="px-4 py-1.5 bg-[#0B3D2C] text-white text-sm font-medium rounded-lg hover:bg-[#0B3D2C]/90 transition-colors"
+                      >
+                        Search
+                      </button>
+                    )}
+                    {!searchQuery.trim() && (
+                      <div className="flex items-center gap-2 text-xs text-gray-400">
+                        <button type="button" onClick={() => { router.push("/shortlets?city=Lagos"); setSearchOpen(false); }} className="px-2 py-1 bg-white rounded border border-gray-200 hover:border-gray-300 transition-colors">Lagos</button>
+                        <button type="button" onClick={() => { router.push("/shortlets?city=Abuja"); setSearchOpen(false); }} className="px-2 py-1 bg-white rounded border border-gray-200 hover:border-gray-300 transition-colors">Abuja</button>
+                        <button type="button" onClick={() => { router.push("/shortlets?city=Port Harcourt"); setSearchOpen(false); }} className="px-2 py-1 bg-white rounded border border-gray-200 hover:border-gray-300 transition-colors">PH</button>
                       </div>
-                    </div>
-                  </div>
-                </Link>
+                    )}
+                  </form>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
-      </div>
 
-      {/* Bottom border when expanded with searchOpen (overlay mode) */}
-      {searchOpen && <div className="border-b border-gray-200" />}
-    </motion.header>
+        {/* Bottom border */}
+        <div className="border-b border-gray-100" />
+      </header>
+
+      {/* Mobile nav links — horizontal scroll below header on mobile */}
+      <div className="lg:hidden sticky top-[68px] z-40 bg-white border-b border-gray-100">
+        <div className="flex items-center gap-1 px-4 py-2 overflow-x-auto scrollbar-hide">
+          {navLinks.map((link) => {
+            const Icon = link.icon;
+            const active = pathname === link.href || (link.href === "/shortlets" && pathname.startsWith("/shortlets"));
+            return (
+              <Link
+                key={link.label}
+                href={link.href}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                  active
+                    ? "bg-[#0B3D2C] text-white"
+                    : "bg-gray-100 text-gray-600"
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {link.label}
+                {link.soon && <span className="text-[9px] opacity-60">Soon</span>}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </>
   );
 };

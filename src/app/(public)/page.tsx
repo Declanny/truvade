@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { PropertyCard } from "@/components/property";
 import { LocationCard } from "@/components/ui";
 import { mockProperties, CITIES } from "@/lib/mock-data";
@@ -118,9 +120,89 @@ function LocationCardsSection() {
               key={city.name}
               name={city.name}
               image={city.image}
-              href={`/properties?city=${encodeURIComponent(city.name)}`}
+              href={`/shortlets?city=${encodeURIComponent(city.name)}`}
             />
           ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HeroBanner() {
+  const router = useRouter();
+  const [where, setWhere] = useState("");
+  const [space, setSpace] = useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (where.trim()) params.set("city", where.trim());
+    if (space.trim()) params.set("q", space.trim());
+    router.push(`/shortlets${params.toString() ? `?${params.toString()}` : ""}`);
+  };
+
+  return (
+    <section className="hidden lg:block max-w-[1760px] mx-auto px-10 pt-0 pb-2">
+      <div className="relative rounded-2xl overflow-hidden h-[240px]">
+        {/* Background image */}
+        <Image
+          src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1300&h=300&fit=crop&crop=center&q=80"
+          alt="Modern shortlet interior"
+          fill
+          className="object-cover"
+          priority
+        />
+        {/* Dark gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10" />
+
+        {/* Content */}
+        <div className="relative h-full flex flex-col items-center justify-center px-8">
+          <h1 className="text-4xl md:text-5xl font-bold text-white text-center max-w-3xl leading-tight">
+            Stay Different. Stay Anywhere.
+          </h1>
+
+          {/* Search bar */}
+          <form
+            onSubmit={handleSearch}
+            className="mt-10 flex items-center bg-white rounded-full shadow-xl px-2 py-2 w-full max-w-2xl"
+          >
+            {/* Where */}
+            <div className="flex-1 px-4">
+              <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Where</label>
+              <input
+                type="text"
+                value={where}
+                onChange={(e) => setWhere(e.target.value)}
+                placeholder="Search Destination"
+                className="w-full text-sm text-gray-900 placeholder:text-gray-400 outline-none bg-transparent"
+              />
+            </div>
+
+            {/* Divider */}
+            <div className="h-10 w-px bg-gray-200 shrink-0" />
+
+            {/* Space */}
+            <div className="flex-1 px-4">
+              <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Space</label>
+              <input
+                type="text"
+                value={space}
+                onChange={(e) => setSpace(e.target.value)}
+                placeholder="Search Accommodation"
+                className="w-full text-sm text-gray-900 placeholder:text-gray-400 outline-none bg-transparent"
+              />
+            </div>
+
+            {/* Search button */}
+            <button
+              type="submit"
+              className="shrink-0 flex items-center gap-2 bg-[#0B3D2C] hover:bg-[#0B3D2C]/90 text-white text-sm font-semibold px-6 py-3 rounded-full transition-colors"
+            >
+              <Search className="w-4 h-4" />
+              Search
+            </button>
+          </form>
         </div>
       </div>
     </section>
@@ -145,66 +227,67 @@ export default function HomePage() {
 
   return (
     <div className="bg-white pt-4 pb-8">
+      <HeroBanner />
       <LocationCardsSection />
       <CarouselSection
         title="Popular homes in Lagos"
         properties={lagosProperties}
-        href="/properties?city=Lagos"
+        href="/shortlets?city=Lagos"
       />
       <CarouselSection
         title="Available in Lekki this weekend"
         properties={lekkiProperties}
-        href="/properties?city=Lekki"
+        href="/shortlets?city=Lekki"
       />
       <CarouselSection
         title="Stays in Victoria Island"
         properties={victoriaIslandProperties}
-        href="/properties?city=Victoria+Island"
+        href="/shortlets?city=Victoria+Island"
       />
       <CarouselSection
         title="Homes in Ikeja"
         properties={ikejaProperties}
-        href="/properties?city=Ikeja"
+        href="/shortlets?city=Ikeja"
       />
       <CarouselSection
         title="Stays in Abuja"
         properties={abujaProperties}
-        href="/properties?city=Abuja"
+        href="/shortlets?city=Abuja"
       />
       <CarouselSection
         title="Explore Port Harcourt"
         properties={portHarcourtProperties}
-        href="/properties?city=Port+Harcourt"
+        href="/shortlets?city=Port+Harcourt"
       />
       <CarouselSection
         title="Stays in Ikoyi"
         properties={ikoyiProperties}
-        href="/properties?city=Ikoyi"
+        href="/shortlets?city=Ikoyi"
       />
       <CarouselSection
         title="Explore Ibadan"
         properties={ibadanProperties}
-        href="/properties?city=Ibadan"
+        href="/shortlets?city=Ibadan"
       />
       <CarouselSection
         title="Stays in Ajah"
         properties={ajahProperties}
-        href="/properties?city=Ajah"
+        href="/shortlets?city=Ajah"
       />
       <CarouselSection
         title="Homes in Surulere"
         properties={surulereProperties}
-        href="/properties?city=Surulere"
+        href="/shortlets?city=Surulere"
       />
       <CarouselSection
         title="Explore Yaba"
         properties={yabaProperties}
-        href="/properties?city=Yaba"
+        href="/shortlets?city=Yaba"
       />
       <CarouselSection
         title="Stays in Enugu"
         properties={enuguProperties}
-        href="/properties?city=Enugu"
+        href="/shortlets?city=Enugu"
       />
     </div>
   );
