@@ -55,7 +55,7 @@ export default function OwnerPropertiesPage() {
                 <PropertyCard property={property} />
 
                 {/* Owner status badge overlay */}
-                {property.status !== "ACTIVE" && status && (
+                {status && (
                   <div className="absolute top-3 left-3 z-10">
                     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium shadow-sm ${status.bg} ${status.text}`}>
                       {property.status === "PENDING" && <Clock className="w-3 h-3" />}
