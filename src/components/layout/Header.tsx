@@ -4,8 +4,9 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, ChevronDown, MapPinHouse, Home } from "lucide-react";
+import { Search, X, ChevronDown, MapPinHouse, Home, Menu } from "lucide-react";
 import Logo from "../ui/Logo";
+import { UserMenuDropdown } from "./UserMenuDropdown";
 
 const navLinks = [
   { href: "/shortlets", label: "Shortlets", icon: MapPinHouse, soon: false },
@@ -64,18 +65,30 @@ export const Header: React.FC = () => {
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
+  // Transparent mode: on homepage, above banner, desktop only
+  const transparent = isHome && !pastBanner;
+
   return (
     <>
       <header
-        className={`sticky top-0 z-50 bg-white transition-shadow duration-200 ${
-          isScrolled ? "shadow-[0_1px_3px_rgba(0,0,0,0.08)]" : ""
+        className={`sticky top-0 z-50 transition-all duration-300 ${
+          transparent
+            ? "bg-white lg:bg-transparent"
+            : `bg-white ${isScrolled ? "shadow-[0_1px_3px_rgba(0,0,0,0.08)]" : ""}`
         }`}
       >
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-[68px]">
             {/* Logo */}
             <Link href="/" className="shrink-0">
-              <Logo variant="dark" size="lg" />
+              {transparent ? (
+                <>
+                  <Logo variant="dark" size="lg" className="lg:hidden" />
+                  <Logo variant="light" size="lg" className="hidden lg:block" />
+                </>
+              ) : (
+                <Logo variant="dark" size="lg" />
+              )}
             </Link>
 
             {/* Desktop search bar — appears when scrolled past hero banner on homepage */}
@@ -120,14 +133,16 @@ export const Header: React.FC = () => {
               {/* Switch to Host */}
               <Link
                 href="/owner"
-                className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
+                  transparent ? "text-white hover:text-white/80" : "text-gray-600 hover:text-gray-900"
+                }`}
               >
                 <Home className="w-4 h-4" />
                 Switch to Host
               </Link>
 
               {/* Divider */}
-              <div className="h-5 w-px bg-gray-200" />
+              <div className={`h-5 w-px ${transparent ? "bg-white/60" : "bg-gray-200"}`} />
 
               {/* Nav links */}
               <nav className="flex items-center gap-1">
@@ -138,9 +153,13 @@ export const Header: React.FC = () => {
                       key={link.label}
                       href={link.href}
                       className={`relative flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                        active
-                          ? "text-[#0B3D2C] bg-[#0B3D2C]/5"
-                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                        transparent
+                          ? active
+                            ? "text-white bg-white/15"
+                            : "text-white hover:text-white/80 hover:bg-white/10"
+                          : active
+                            ? "text-[#0B3D2C] bg-[#0B3D2C]/5"
+                            : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                       }`}
                     >
                       <link.icon className="w-5 h-5" />
@@ -156,66 +175,29 @@ export const Header: React.FC = () => {
               </nav>
 
               {/* Divider */}
-              <div className="h-5 w-px bg-gray-200" />
+              <div className={`h-5 w-px ${transparent ? "bg-white/60" : "bg-gray-200"}`} />
 
               {/* Auth menu */}
               <div ref={menuRef} className="relative">
                 <button
                   onClick={() => { setMenuOpen((v) => !v); }}
-                  className={`flex items-center gap-2 pl-3 pr-2 py-2 rounded-lg border transition-all ${
+                  className={`flex items-center gap-2.5 pl-3 pr-2 py-2 rounded-full border transition-all ${
                     menuOpen
-                      ? "border-[#0B3D2C]/30 bg-[#0B3D2C]/5"
-                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                      ? transparent
+                        ? "border-white/80 bg-white/15 shadow-md"
+                        : "border-gray-300 shadow-md"
+                      : transparent
+                        ? "border-white/70 hover:border-white/90 hover:shadow-md"
+                        : "border-gray-200 hover:shadow-md"
                   }`}
                 >
+                  <Menu className={`w-4 h-4 ${transparent ? "text-white" : "text-gray-700"}`} />
                   <div className="w-7 h-7 rounded-full bg-[#0B3D2C] flex items-center justify-center">
                     <span className="text-white text-xs font-semibold">G</span>
                   </div>
-                  <span className="text-sm font-medium text-gray-700">Guest</span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-gray-500 transition-transform ${menuOpen ? "rotate-180" : ""}`} />
                 </button>
 
-                <AnimatePresence>
-                  {menuOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 6 }}
-                      transition={{ duration: 0.15 }}
-                      className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50"
-                    >
-                      <Link
-                        href="/signup"
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-4 py-2.5 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition-colors"
-                      >
-                        Sign up
-                      </Link>
-                      <Link
-                        href="/login"
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        Log in
-                      </Link>
-                      <div className="my-1.5 border-t border-gray-100" />
-                      <Link
-                        href="/owner"
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        List your property
-                      </Link>
-                      <Link
-                        href="#"
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        Help Center
-                      </Link>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <UserMenuDropdown isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
               </div>
             </div>
 
@@ -236,59 +218,19 @@ export const Header: React.FC = () => {
               <div ref={mobileMenuRef} className="relative lg:hidden">
                 <button
                   onClick={() => { setMenuOpen((v) => !v); setSearchOpen(false); }}
-                  className={`flex items-center gap-2 pl-3 pr-2 py-2 rounded-lg border transition-all ${
+                  className={`flex items-center gap-2 p-2 rounded-full border transition-all ${
                     menuOpen
-                      ? "border-[#0B3D2C]/30 bg-[#0B3D2C]/5"
-                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                      ? "border-gray-300 shadow-md"
+                      : "border-gray-200 hover:shadow-md"
                   }`}
                 >
+                  <Menu className="w-4 h-4 text-gray-700" />
                   <div className="w-7 h-7 rounded-full bg-[#0B3D2C] flex items-center justify-center">
                     <span className="text-white text-xs font-semibold">G</span>
                   </div>
-                  <ChevronDown className={`w-3.5 h-3.5 text-gray-500 transition-transform ${menuOpen ? "rotate-180" : ""}`} />
                 </button>
 
-                <AnimatePresence>
-                  {menuOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 6 }}
-                      transition={{ duration: 0.15 }}
-                      className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50"
-                    >
-                      <Link
-                        href="/signup"
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-4 py-2.5 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition-colors"
-                      >
-                        Sign up
-                      </Link>
-                      <Link
-                        href="/login"
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        Log in
-                      </Link>
-                      <div className="my-1.5 border-t border-gray-100" />
-                      <Link
-                        href="/owner"
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        List your property
-                      </Link>
-                      <Link
-                        href="#"
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        Help Center
-                      </Link>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <UserMenuDropdown isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
               </div>
             </div>
           </div>
@@ -349,7 +291,7 @@ export const Header: React.FC = () => {
         </div>
 
         {/* Bottom border */}
-        <div className="border-b border-gray-100" />
+        <div className={`border-b ${transparent ? "border-transparent" : "border-gray-100"}`} />
       </header>
 
       {/* Mobile nav links — horizontal scroll below header on mobile */}

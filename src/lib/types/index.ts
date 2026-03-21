@@ -60,6 +60,16 @@ export interface Property {
   reviewCount: number;
   hostName?: string;
   hostAvatar?: string;
+  hostRating?: number;
+  hostReviewCount?: number;
+  hostYearsHosting?: number;
+  hostResponseRate?: string;
+  hostResponseTime?: string;
+  coHosts?: Array<{
+    id: string;
+    name: string;
+    avatar?: string;
+  }>;
   orgId: string;
   organization?: Organization;
   createdAt: Date;

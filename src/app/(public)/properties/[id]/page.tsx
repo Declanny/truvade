@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 import { Container } from "@/components/layout";
 import { Button, Badge, Card } from "@/components/ui";
-import { PropertyGallery } from "@/components/property";
+import { PropertyGallery, HostSection } from "@/components/property";
 import { mockProperties } from "@/lib/mock-data";
 import { formatCurrency, calculateNights } from "@/lib/types";
 
@@ -213,31 +213,7 @@ export default function PropertyDetailPage() {
             </div>
 
             {/* Host Info */}
-            <div className="py-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Meet your host
-              </h2>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-[#0B3D2C] to-[#1a6b4a] rounded-full flex items-center justify-center text-white text-xl font-bold">
-                    {property.hostAvatar || "T"}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">
-                      {property.hostName || "Truvade Managed"}
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      Verified host &middot; Responds within 1 hour
-                    </p>
-                  </div>
-                </div>
-                <Link href="/guest/messages">
-                  <Button variant="outline" size="sm" leftIcon={<MessageSquare className="w-4 h-4" />}>
-                    Message Host
-                  </Button>
-                </Link>
-              </div>
-            </div>
+            <HostSection property={property} />
 
             {/* Reviews */}
             <div className="py-6 border-b border-gray-200">

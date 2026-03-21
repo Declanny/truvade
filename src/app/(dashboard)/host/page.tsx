@@ -126,7 +126,7 @@ export default function HostDashboardPage() {
       </div>
 
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 border-l-4 border-[#0B3D2C] pl-4">Host Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Host Dashboard</h1>
         <p className="text-gray-500 mt-1 pl-5">
           Managing properties for {workspaces.find((w) => w.id === activeWorkspace)?.orgName}
         </p>

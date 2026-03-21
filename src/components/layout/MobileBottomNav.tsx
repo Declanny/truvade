@@ -10,7 +10,7 @@ const navItems = [
   { icon: Heart, label: "Wishlist", href: "/guest/wishlist" },
   { icon: CalendarDays, label: "Bookings", href: "/guest/bookings" },
   { icon: MessageCircle, label: "Inbox", href: "/guest/messages" },
-  { icon: User, label: "Profile", href: "/guest/profile" },
+  { icon: User, label: "Profile", href: "/account/profile" },
 ];
 
 export const MobileBottomNav = () => {

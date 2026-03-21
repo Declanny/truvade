@@ -143,21 +143,21 @@ function HeroBanner() {
   };
 
   return (
-    <section className="hidden lg:block max-w-[1760px] mx-auto px-10 pt-0 pb-2">
-      <div className="relative rounded-2xl overflow-hidden h-[240px]">
+    <section className="hidden lg:block -mt-[68px] relative -top-[2px]">
+      <div className="relative overflow-hidden h-[390px]">
         {/* Background image */}
         <Image
-          src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1300&h=300&fit=crop&crop=center&q=80"
+          src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1920&h=400&fit=crop&crop=center&q=80"
           alt="Modern shortlet interior"
           fill
           className="object-cover"
           priority
         />
         {/* Dark gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/60" />
 
         {/* Content */}
-        <div className="relative h-full flex flex-col items-center justify-center px-8">
+        <div className="relative h-full flex flex-col items-center justify-center px-8 pt-[68px]">
           <h1 className="text-4xl md:text-5xl font-bold text-white text-center max-w-3xl leading-tight">
             Stay Different. Stay Anywhere.
           </h1>
@@ -165,39 +165,39 @@ function HeroBanner() {
           {/* Search bar */}
           <form
             onSubmit={handleSearch}
-            className="mt-10 flex items-center bg-white rounded-full shadow-xl px-2 py-2 w-full max-w-2xl"
+            className="mt-10 flex items-center bg-white rounded-full shadow-xl px-3 py-3 w-full max-w-2xl"
           >
             {/* Where */}
-            <div className="flex-1 px-4">
-              <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Where</label>
+            <div className="flex-1 px-5">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">Where</label>
               <input
                 type="text"
                 value={where}
                 onChange={(e) => setWhere(e.target.value)}
                 placeholder="Search Destination"
-                className="w-full text-sm text-gray-900 placeholder:text-gray-400 outline-none bg-transparent"
+                className="w-full text-base text-gray-900 placeholder:text-gray-400 outline-none bg-transparent mt-0.5"
               />
             </div>
 
             {/* Divider */}
-            <div className="h-10 w-px bg-gray-200 shrink-0" />
+            <div className="h-12 w-px bg-gray-200 shrink-0" />
 
             {/* Space */}
-            <div className="flex-1 px-4">
-              <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Space</label>
+            <div className="flex-1 px-5">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">Space</label>
               <input
                 type="text"
                 value={space}
                 onChange={(e) => setSpace(e.target.value)}
                 placeholder="Search Accommodation"
-                className="w-full text-sm text-gray-900 placeholder:text-gray-400 outline-none bg-transparent"
+                className="w-full text-base text-gray-900 placeholder:text-gray-400 outline-none bg-transparent mt-0.5"
               />
             </div>
 
             {/* Search button */}
             <button
               type="submit"
-              className="shrink-0 flex items-center gap-2 bg-[#0B3D2C] hover:bg-[#0B3D2C]/90 text-white text-sm font-semibold px-6 py-3 rounded-full transition-colors"
+              className="shrink-0 flex items-center gap-2 bg-[#0B3D2C] hover:bg-[#0B3D2C]/90 text-white text-base font-semibold px-7 py-3.5 rounded-full transition-colors"
             >
               <Search className="w-4 h-4" />
               Search
@@ -226,7 +226,7 @@ export default function HomePage() {
   const enuguProperties = getPropertiesByCity("Enugu");
 
   return (
-    <div className="bg-white pt-4 pb-8">
+    <div className="pb-8">
       <HeroBanner />
       <LocationCardsSection />
       <CarouselSection

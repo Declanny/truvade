@@ -107,7 +107,7 @@ export default function HostCalendarPage() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 border-l-4 border-[#0B3D2C] pl-4 mb-6">Availability Calendar</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Availability Calendar</h1>
 
       {/* Property Selector */}
       <div className="mb-6 max-w-sm">

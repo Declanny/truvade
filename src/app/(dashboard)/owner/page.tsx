@@ -32,7 +32,7 @@ export default function OwnerDashboardPage() {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 border-l-4 border-[#0B3D2C] pl-4">Welcome back!</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Welcome back!</h1>
         <p className="text-gray-500 mt-1 pl-5">Here is an overview of your properties and bookings.</p>
       </div>
 

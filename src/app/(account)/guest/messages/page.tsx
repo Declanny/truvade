@@ -81,7 +81,7 @@ export default function GuestMessagesPage() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 border-l-4 border-[#0B3D2C] pl-4 mb-6">Messages</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Messages</h1>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden" style={{ height: "calc(100vh - 200px)", minHeight: "500px" }}>
         <div className="flex h-full">

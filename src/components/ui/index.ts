@@ -19,3 +19,9 @@ export type { ModalProps } from "./Modal";
 export { default as Logo } from "./Logo";
 
 export { LocationCard } from "./LocationCard";
+
+export { Avatar } from "./Avatar";
+export type { AvatarProps } from "./Avatar";
+
+export { SettingsRow } from "./SettingsRow";
+export type { SettingsRowProps } from "./SettingsRow";

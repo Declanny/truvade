@@ -40,7 +40,7 @@ const statusVariant: Record<string, "success" | "warning" | "info"> = {
 export default function OwnerPayoutsPage() {
   return (
     <div className="max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 border-l-4 border-[#0B3D2C] pl-4 mb-6">Payouts</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Payouts</h1>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">

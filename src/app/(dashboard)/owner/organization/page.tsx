@@ -24,7 +24,7 @@ export default function OrganizationSettingsPage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 border-l-4 border-[#0B3D2C] pl-4 mb-6">Organization Settings</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Organization Settings</h1>
 
       <div className="space-y-6">
         {/* General Info */}

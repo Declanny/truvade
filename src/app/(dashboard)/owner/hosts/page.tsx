@@ -97,7 +97,7 @@ export default function OwnerHostsPage() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 border-l-4 border-[#0B3D2C] pl-4">Manage Hosts</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Manage Hosts</h1>
         <Button
           variant="primary"
           leftIcon={<UserPlus className="w-4 h-4" />}

@@ -124,21 +124,27 @@ export default function GuestBookingsPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 border-l-4 border-[#0B3D2C] pl-4 mb-6">My Bookings</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">My Bookings</h1>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-lg mb-6 w-fit">
+      <div className="flex gap-6 border-b border-gray-200 mb-8">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+            className={`relative pb-3 text-sm font-medium transition-colors ${
               activeTab === tab.key
-                ? "bg-[#0B3D2C] text-white shadow-sm"
-                : "text-gray-600 hover:text-gray-900"
+                ? "text-gray-900"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             {tab.label}
+            {activeTab === tab.key && (
+              <motion.div
+                layoutId="activeTab"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900 rounded-full"
+              />
+            )}
           </button>
         ))}
       </div>
