@@ -1,8 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { TrendingUp, Clock, ArrowDownToLine } from "lucide-react";
-import { Card, CardHeader, Badge } from "@/components/ui";
+import { Card, CardHeader, Badge, StatBar } from "@/components/ui";
 import { formatCurrency, formatDate } from "@/lib/types";
 
 const summaryCards = [
@@ -42,28 +41,9 @@ export default function OwnerPayoutsPage() {
     <div className="max-w-5xl mx-auto">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Payouts</h1>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        {summaryCards.map((card, i) => (
-          <motion.div
-            key={card.label}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.08 }}
-          >
-            <Card className={`${card.bg} border-none`} padding="lg">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-white/70 font-medium">{card.label}</p>
-                  <p className="text-2xl font-bold text-white mt-1">{card.value}</p>
-                </div>
-                <div className="bg-white/15 text-white p-2.5 rounded-lg">
-                  {card.icon}
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-        ))}
+      {/* Summary */}
+      <div className="mb-8">
+        <StatBar items={summaryCards} />
       </div>
 
       {/* Payout History Table */}

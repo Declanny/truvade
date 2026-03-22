@@ -181,7 +181,7 @@ export default function HostProfilePage() {
                   <p>Response rate: {host.responseRate}</p>
                   <p>Responds {host.responseTime}</p>
                 </div>
-                <Link href="/guest/messages" className="inline-block mt-5">
+                <Link href="/account/guest/messages" className="inline-block mt-5">
                   <Button variant="outline" size="lg" leftIcon={<MessageSquare className="w-4 h-4" />}>
                     Message {host.name.split(" ")[0]}
                   </Button>

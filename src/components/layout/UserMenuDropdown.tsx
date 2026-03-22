@@ -42,15 +42,15 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
           {isLoggedIn ? (
             <>
               {/* Section 1: Guest navigation */}
-              <Link href="/guest/wishlist" onClick={onClose} className={menuItemClass}>
+              <Link href="/account/guest/wishlist" onClick={onClose} className={menuItemClass}>
                 <Heart className="w-4 h-4" />
                 Wishlists
               </Link>
-              <Link href="/guest/bookings" onClick={onClose} className={menuItemClass}>
+              <Link href="/account/guest/bookings" onClick={onClose} className={menuItemClass}>
                 <CalendarDays className="w-4 h-4" />
                 Bookings
               </Link>
-              <Link href="/guest/messages" onClick={onClose} className={menuItemClass}>
+              <Link href="/account/guest/messages" onClick={onClose} className={menuItemClass}>
                 <MessageSquare className="w-4 h-4" />
                 Messages
               </Link>
@@ -70,7 +70,7 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
                 <Globe className="w-4 h-4" />
                 Languages & currency
               </Link>
-              <Link href="#" onClick={onClose} className={menuItemClass}>
+              <Link href="/help" onClick={onClose} className={menuItemClass}>
                 <HelpCircle className="w-4 h-4" />
                 Help Center
               </Link>
@@ -85,7 +85,7 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
                   <p className="text-xs text-gray-500 mt-0.5">Start hosting and earn income</p>
                 </div>
               </Link>
-              <Link href="#" onClick={onClose} className={menuItemClass}>
+              <Link href="/owner/hosts" onClick={onClose} className={menuItemClass}>
                 <Users className="w-4 h-4" />
                 Find a co-host
               </Link>
@@ -121,7 +121,7 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
                 <Home className="w-4 h-4" />
                 List your property
               </Link>
-              <Link href="#" onClick={onClose} className={menuItemClass}>
+              <Link href="/help" onClick={onClose} className={menuItemClass}>
                 <HelpCircle className="w-4 h-4" />
                 Help Center
               </Link>

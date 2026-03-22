@@ -7,9 +7,9 @@ import { usePathname } from "next/navigation";
 
 const navItems = [
   { icon: Search, label: "Explore", href: "/" },
-  { icon: Heart, label: "Wishlist", href: "/guest/wishlist" },
-  { icon: CalendarDays, label: "Bookings", href: "/guest/bookings" },
-  { icon: MessageCircle, label: "Inbox", href: "/guest/messages" },
+  { icon: Heart, label: "Wishlist", href: "/account/guest/wishlist" },
+  { icon: CalendarDays, label: "Bookings", href: "/account/guest/bookings" },
+  { icon: MessageCircle, label: "Inbox", href: "/account/guest/messages" },
   { icon: User, label: "Profile", href: "/account/profile" },
 ];
 

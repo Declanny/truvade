@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Building2, CalendarDays, TrendingUp, CreditCard, UserPlus } from "lucide-react";
-import { Card, CardHeader, Badge } from "@/components/ui";
+import { Card, CardHeader, Badge, StatBar } from "@/components/ui";
 import { formatCurrency, formatDate } from "@/lib/types";
 import Link from "next/link";
 
@@ -36,77 +36,30 @@ export default function OwnerDashboardPage() {
         <p className="text-gray-500 mt-1 pl-5">Here is an overview of your properties and bookings.</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {stats.map((stat, i) => (
-          <motion.div
-            key={stat.label}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.08 }}
-          >
-            <Card className={`${stat.bg} border-none`} padding="lg">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-white/70 font-medium">{stat.label}</p>
-                  <p className="text-2xl font-bold text-white mt-1">{stat.value}</p>
-                  <p className="text-xs text-white/50 mt-1">{stat.change}</p>
-                </div>
-                <div className="bg-white/15 text-white p-2.5 rounded-lg">
-                  {stat.icon}
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-        ))}
+      {/* Stats */}
+      <div className="mb-8">
+        <StatBar items={stats} />
       </div>
 
-      {/* Action Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      {/* Quick Actions */}
+      <div className="flex flex-wrap gap-3 mb-8">
         <Link href="/owner/properties">
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.32 }}>
-            <Card className="bg-[#0B3D2C] border-none cursor-pointer hover:bg-[#0a3526] transition-colors" padding="lg">
-              <div className="flex items-center gap-4">
-                <div className="bg-white/15 p-3 rounded-lg">
-                  <Building2 className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-white text-lg">Add Property</h3>
-                  <p className="text-white/60 text-sm">List a new property</p>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
+          <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.32 }}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:border-[#0B3D2C] transition-colors">
+            <Building2 className="w-4 h-4" /> Add Property
+          </motion.button>
         </Link>
         <Link href="/owner/hosts">
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-            <Card variant="bordered" className="cursor-pointer hover:border-[#0B3D2C] transition-colors" padding="lg">
-              <div className="flex items-center gap-4">
-                <div className="bg-[#0B3D2C]/10 p-3 rounded-lg">
-                  <UserPlus className="w-6 h-6 text-[#0B3D2C]" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 text-lg">Invite Host</h3>
-                  <p className="text-gray-500 text-sm">Add a property manager</p>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
+          <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:border-[#0B3D2C] transition-colors">
+            <UserPlus className="w-4 h-4" /> Invite Host
+          </motion.button>
         </Link>
         <Link href="/owner/payouts">
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.48 }}>
-            <Card className="bg-[#B87333] border-none cursor-pointer hover:bg-[#a6672e] transition-colors" padding="lg">
-              <div className="flex items-center gap-4">
-                <div className="bg-white/15 p-3 rounded-lg">
-                  <CreditCard className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-white text-lg">View Payouts</h3>
-                  <p className="text-white/60 text-sm">Track your earnings</p>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
+          <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.48 }}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:border-[#0B3D2C] transition-colors">
+            <CreditCard className="w-4 h-4" /> View Payouts
+          </motion.button>
         </Link>
       </div>
 

@@ -16,7 +16,7 @@ const settingsNav = [
   { label: "Login & security", href: "/account/settings/security", icon: Shield },
   { label: "Privacy", href: "/account/settings/privacy", icon: Eye },
   { label: "Notifications", href: "/account/settings/notifications", icon: Bell },
-  { label: "Payments", href: "/account/settings/payments", icon: CreditCard },
+  { label: "Payments & payouts", href: "/account/settings/payments", icon: CreditCard },
   { label: "Languages & currency", href: "/account/settings/preferences", icon: Globe },
 ];
 

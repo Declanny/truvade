@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Header } from "@/components/layout";
-import { Footer } from "@/components/layout";
-import { MobileBottomNav } from "@/components/layout";
+import { Header, Footer, MobileBottomNav, WorkspaceSwitcher } from "@/components/layout";
+import { WorkspaceProvider } from "@/context/WorkspaceContext";
 
 type NavItem = {
   label: string;
@@ -17,6 +16,7 @@ const ownerNav: NavItem[] = [
   { label: "Hosts", href: "/owner/hosts" },
   { label: "Payouts", href: "/owner/payouts" },
   { label: "Organization", href: "/owner/organization" },
+  { label: "Settings", href: "/account/settings" },
 ];
 
 const hostNav: NavItem[] = [
@@ -24,6 +24,7 @@ const hostNav: NavItem[] = [
   { label: "Calendar", href: "/host/calendar" },
   { label: "Bookings", href: "/host/bookings" },
   { label: "Messages", href: "/host/messages" },
+  { label: "Settings", href: "/account/settings" },
 ];
 
 function getNavForPath(pathname: string): NavItem[] {
@@ -34,16 +35,22 @@ function getNavForPath(pathname: string): NavItem[] {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const nav = getNavForPath(pathname);
+  const isHost = pathname.startsWith("/host");
 
-  return (
+  const content = (
     <>
       <Header />
 
       {/* Role sub-navigation */}
       <div className="sticky top-[68px] z-40 bg-white border-b border-gray-100">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Desktop: centered text links */}
-          <div className="hidden md:flex items-center justify-center gap-8 h-12">
+          {/* Desktop: nav links + workspace switcher */}
+          <div className="hidden md:flex items-center justify-center gap-8 h-12 relative">
+            {isHost && (
+              <div className="absolute right-0">
+                <WorkspaceSwitcher />
+              </div>
+            )}
             {nav.map((item) => {
               const isActive = pathname === item.href ||
                 (item.href !== "/owner" && item.href !== "/host" && pathname.startsWith(item.href));
@@ -64,7 +71,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             })}
           </div>
 
-          {/* Mobile: horizontal scroll pills */}
+          {/* Mobile: horizontal scroll pills + workspace switcher */}
           <div className="flex md:hidden items-center gap-2 py-2 overflow-x-auto scrollbar-hide">
             {nav.map((item) => {
               const isActive = pathname === item.href ||
@@ -81,6 +88,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </Link>
               );
             })}
+            {isHost && <div className="ml-auto"><WorkspaceSwitcher /></div>}
           </div>
         </div>
       </div>
@@ -95,4 +103,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <MobileBottomNav />
     </>
   );
+
+  return isHost ? <WorkspaceProvider>{content}</WorkspaceProvider> : content;
 }

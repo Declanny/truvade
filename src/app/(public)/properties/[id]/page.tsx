@@ -9,7 +9,6 @@ import {
   Users,
   BedDouble,
   Bath,
-  Calendar,
   Minus,
   Plus,
   ChevronLeft,
@@ -33,8 +32,8 @@ import {
 } from "lucide-react";
 import { Container } from "@/components/layout";
 import { Button, Badge, Card } from "@/components/ui";
-import { PropertyGallery, HostSection } from "@/components/property";
-import { mockProperties } from "@/lib/mock-data";
+import { PropertyGallery, HostSection, BookingCalendar } from "@/components/property";
+import { mockProperties, mockBookings } from "@/lib/mock-data";
 import { formatCurrency, calculateNights } from "@/lib/types";
 
 const amenityIcons: Record<string, React.ElementType> = {
@@ -63,6 +62,14 @@ export default function PropertyDetailPage() {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guestCount, setGuestCount] = useState(1);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+
+  const bookedRanges = useMemo(
+    () => mockBookings
+      .filter((b) => b.propertyId === id && b.status !== "CANCELLED")
+      .map((b) => ({ checkIn: new Date(b.checkIn), checkOut: new Date(b.checkOut) })),
+    [id]
+  );
 
   const nights = useMemo(() => {
     if (!checkIn || !checkOut) return 0;
@@ -75,7 +82,7 @@ export default function PropertyDetailPage() {
 
   if (!property) {
     return (
-      <Container>
+      <Container size="lg">
         <div className="py-20 text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             Property Not Found
@@ -100,7 +107,7 @@ export default function PropertyDetailPage() {
   };
 
   return (
-    <Container>
+    <Container size="lg">
       <div className="py-4 md:py-8">
         {/* Top Bar */}
         <div className="flex items-center justify-between mb-4">
@@ -311,55 +318,76 @@ export default function PropertyDetailPage() {
                 </div>
 
                 {/* Dates */}
-                <div className="border border-gray-300 rounded-xl overflow-hidden mb-4">
-                  <div className="grid grid-cols-2 divide-x divide-gray-300">
-                    <div className="p-3">
-                      <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">
-                        Check-in
-                      </label>
-                      <input
-                        type="date"
-                        value={checkIn}
-                        onChange={(e) => setCheckIn(e.target.value)}
-                        className="w-full text-sm text-gray-900 focus:outline-none bg-transparent"
-                      />
-                    </div>
-                    <div className="p-3">
-                      <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">
-                        Check-out
-                      </label>
-                      <input
-                        type="date"
-                        value={checkOut}
-                        onChange={(e) => setCheckOut(e.target.value)}
-                        className="w-full text-sm text-gray-900 focus:outline-none bg-transparent"
-                      />
-                    </div>
-                  </div>
-                  <div className="border-t border-gray-300 p-3">
-                    <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">
-                      Guests
-                    </label>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-900">
-                        {guestCount} guest{guestCount !== 1 && "s"}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setGuestCount(Math.max(1, guestCount - 1))}
-                          className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center hover:border-gray-500 transition-colors disabled:opacity-30"
-                          disabled={guestCount <= 1}
-                        >
-                          <Minus className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => setGuestCount(Math.min(property.maxGuests, guestCount + 1))}
-                          className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center hover:border-gray-500 transition-colors disabled:opacity-30"
-                          disabled={guestCount >= property.maxGuests}
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
+                <div className="relative mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setCalendarOpen(!calendarOpen)}
+                    className="w-full border border-gray-300 rounded-xl overflow-hidden text-left hover:border-gray-400 transition-colors"
+                  >
+                    <div className="grid grid-cols-2 divide-x divide-gray-300">
+                      <div className="p-3">
+                        <span className="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                          Check-in
+                        </span>
+                        <span className={`text-sm ${checkIn ? "text-gray-900" : "text-gray-400"}`}>
+                          {checkIn ? new Date(checkIn + "T00:00:00").toLocaleDateString("en-NG", { month: "short", day: "numeric", year: "numeric" }) : "Add date"}
+                        </span>
                       </div>
+                      <div className="p-3">
+                        <span className="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                          Check-out
+                        </span>
+                        <span className={`text-sm ${checkOut ? "text-gray-900" : "text-gray-400"}`}>
+                          {checkOut ? new Date(checkOut + "T00:00:00").toLocaleDateString("en-NG", { month: "short", day: "numeric", year: "numeric" }) : "Add date"}
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+
+                  {calendarOpen && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setCalendarOpen(false)} />
+                      <div className="absolute left-0 right-0 lg:left-auto lg:right-0 lg:w-[580px] mt-2 bg-white border border-gray-200 rounded-2xl shadow-xl z-20 p-5">
+                        <BookingCalendar
+                          bookedRanges={bookedRanges}
+                          minNights={property.minNights}
+                          checkIn={checkIn}
+                          checkOut={checkOut}
+                          onSelect={(ci, co) => {
+                            setCheckIn(ci);
+                            setCheckOut(co);
+                            if (ci && co) setCalendarOpen(false);
+                          }}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Guests */}
+                <div className="border border-gray-300 rounded-xl p-3 mb-4">
+                  <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                    Guests
+                  </label>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-900">
+                      {guestCount} guest{guestCount !== 1 && "s"}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setGuestCount(Math.max(1, guestCount - 1))}
+                        className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center hover:border-gray-500 transition-colors disabled:opacity-30"
+                        disabled={guestCount <= 1}
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setGuestCount(Math.min(property.maxGuests, guestCount + 1))}
+                        className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center hover:border-gray-500 transition-colors disabled:opacity-30"
+                        disabled={guestCount >= property.maxGuests}
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
                 </div>

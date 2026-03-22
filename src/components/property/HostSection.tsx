@@ -112,7 +112,7 @@ export const HostSection: React.FC<HostSectionProps> = ({ property }) => {
           </div>
 
           {/* Message host button */}
-          <Link href="/guest/messages">
+          <Link href="/account/guest/messages">
             <Button
               variant="outline"
               size="lg"

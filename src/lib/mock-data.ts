@@ -1,4 +1,4 @@
-import type { Property } from "./types";
+import type { Property, Booking } from "./types";
 
 export const AMENITIES = [
   "WiFi", "Air Conditioning", "Pool", "Parking", "Kitchen", "Washer", "Dryer",
@@ -2304,4 +2304,25 @@ export const mockProperties: Property[] = [
     orgId: "org-2",
     createdAt: new Date("2025-03-08"),
   },
+];
+
+export const mockBookings: Pick<Booking, "id" | "propertyId" | "checkIn" | "checkOut" | "status">[] = [
+  // prop-1
+  { id: "bk-1", propertyId: "prop-1", checkIn: new Date("2026-03-25"), checkOut: new Date("2026-03-29"), status: "CONFIRMED" },
+  { id: "bk-2", propertyId: "prop-1", checkIn: new Date("2026-04-05"), checkOut: new Date("2026-04-10"), status: "CONFIRMED" },
+  { id: "bk-3", propertyId: "prop-1", checkIn: new Date("2026-04-18"), checkOut: new Date("2026-04-22"), status: "PENDING" },
+  // prop-2
+  { id: "bk-4", propertyId: "prop-2", checkIn: new Date("2026-03-28"), checkOut: new Date("2026-04-02"), status: "CONFIRMED" },
+  { id: "bk-5", propertyId: "prop-2", checkIn: new Date("2026-04-12"), checkOut: new Date("2026-04-15"), status: "CONFIRMED" },
+  // prop-3
+  { id: "bk-6", propertyId: "prop-3", checkIn: new Date("2026-04-01"), checkOut: new Date("2026-04-06"), status: "CONFIRMED" },
+  { id: "bk-7", propertyId: "prop-3", checkIn: new Date("2026-04-20"), checkOut: new Date("2026-04-25"), status: "PENDING" },
+  // prop-4
+  { id: "bk-8", propertyId: "prop-4", checkIn: new Date("2026-03-26"), checkOut: new Date("2026-03-30"), status: "CONFIRMED" },
+  { id: "bk-9", propertyId: "prop-4", checkIn: new Date("2026-04-08"), checkOut: new Date("2026-04-14"), status: "CONFIRMED" },
+  // prop-5
+  { id: "bk-10", propertyId: "prop-5", checkIn: new Date("2026-04-02"), checkOut: new Date("2026-04-05"), status: "CONFIRMED" },
+  // prop-6
+  { id: "bk-11", propertyId: "prop-6", checkIn: new Date("2026-03-30"), checkOut: new Date("2026-04-03"), status: "CONFIRMED" },
+  { id: "bk-12", propertyId: "prop-6", checkIn: new Date("2026-04-15"), checkOut: new Date("2026-04-20"), status: "PENDING" },
 ];
