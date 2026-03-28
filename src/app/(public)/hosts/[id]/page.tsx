@@ -13,6 +13,7 @@ const mockHosts: Record<string, {
   id: string;
   name: string;
   initials: string;
+  avatar?: string;
   verified: boolean;
   rating: number;
   reviewCount: number;
@@ -29,6 +30,7 @@ const mockHosts: Record<string, {
     id: "amara-okafor",
     name: "Amara Okafor",
     initials: "AO",
+    avatar: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&h=200&fit=crop&crop=face",
     verified: true,
     rating: 4.9,
     reviewCount: 142,
@@ -48,6 +50,7 @@ const mockHosts: Record<string, {
     id: "chidi-eze",
     name: "Chidi Eze",
     initials: "CE",
+    avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop&crop=face",
     verified: true,
     rating: 4.95,
     reviewCount: 87,
@@ -102,7 +105,7 @@ export default function HostProfilePage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-white border border-gray-200 rounded-2xl p-8 text-center shadow-sm"
               >
-                <Avatar initials={host.initials} name={host.name} size="xl" verified={host.verified} className="mx-auto" />
+                <Avatar src={host.avatar} initials={host.initials} name={host.name} size="xl" verified={host.verified} className="mx-auto" />
                 <h1 className="text-2xl font-bold text-gray-900 mt-4">{host.name}</h1>
                 {host.verified && (
                   <div className="flex items-center justify-center gap-1 mt-1">

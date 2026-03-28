@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { icon: Search, label: "Explore", href: "/" },
+  { icon: Search, label: "Explore", href: "/shortlets" },
   { icon: Heart, label: "Wishlist", href: "/account/guest/wishlist" },
   { icon: CalendarDays, label: "Bookings", href: "/account/guest/bookings" },
   { icon: MessageCircle, label: "Inbox", href: "/account/guest/messages" },
@@ -17,7 +17,7 @@ export const MobileBottomNav = () => {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
-    if (href === "/") return pathname === "/" || pathname.startsWith("/shortlets") || pathname.startsWith("/properties");
+    if (href === "/shortlets") return pathname === "/" || pathname.startsWith("/shortlets") || pathname.startsWith("/properties");
     return pathname.startsWith(href);
   };
 

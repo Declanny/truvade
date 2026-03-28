@@ -78,44 +78,18 @@ function getPropertiesByCity(city: string) {
 }
 
 function LocationCardsSection() {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  const scroll = (direction: "left" | "right") => {
-    if (!scrollRef.current) return;
-    const amount = 260;
-    scrollRef.current.scrollBy({
-      left: direction === "left" ? -amount : amount,
-      behavior: "smooth",
-    });
-  };
+  // Show only first 8 locations (2 rows of 4)
+  const locations = CITIES.slice(0, 8);
 
   return (
     <section className="py-6">
       <div className="max-w-[1760px] mx-auto px-3 sm:px-5 lg:px-10">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-[22px] font-semibold text-gray-900">Top locations</h2>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => scroll("left")}
-              className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:shadow-md transition-shadow"
-            >
-              <ChevronLeft className="w-4 h-4 text-gray-700" />
-            </button>
-            <button
-              onClick={() => scroll("right")}
-              className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:shadow-md transition-shadow"
-            >
-              <ChevronRight className="w-4 h-4 text-gray-700" />
-            </button>
-          </div>
         </div>
 
-        <div
-          ref={scrollRef}
-          className="flex gap-5 sm:gap-6 overflow-x-auto scrollbar-hide pb-2"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        >
-          {CITIES.map((city) => (
+        <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-8 gap-4 sm:gap-6">
+          {locations.map((city) => (
             <LocationCard
               key={city.name}
               name={city.name}
@@ -210,20 +184,11 @@ function HeroBanner() {
 }
 
 export default function HomePage() {
-  const lagosProperties = mockProperties.filter(
-    (p) => p.state === "Lagos"
-  );
+  const lagosProperties = mockProperties.filter((p) => p.state === "Lagos");
   const lekkiProperties = getPropertiesByCity("Lekki");
-  const ikejaProperties = getPropertiesByCity("Ikeja");
-  const abujaProperties = getPropertiesByCity("Abuja");
   const victoriaIslandProperties = getPropertiesByCity("Victoria Island");
+  const abujaProperties = getPropertiesByCity("Abuja");
   const portHarcourtProperties = getPropertiesByCity("Port Harcourt");
-  const ikoyiProperties = getPropertiesByCity("Ikoyi");
-  const ibadanProperties = getPropertiesByCity("Ibadan");
-  const ajahProperties = getPropertiesByCity("Ajah");
-  const surulereProperties = getPropertiesByCity("Surulere");
-  const yabaProperties = getPropertiesByCity("Yaba");
-  const enuguProperties = getPropertiesByCity("Enugu");
 
   return (
     <div className="pb-8">
@@ -245,11 +210,6 @@ export default function HomePage() {
         href="/shortlets?city=Victoria+Island"
       />
       <CarouselSection
-        title="Homes in Ikeja"
-        properties={ikejaProperties}
-        href="/shortlets?city=Ikeja"
-      />
-      <CarouselSection
         title="Stays in Abuja"
         properties={abujaProperties}
         href="/shortlets?city=Abuja"
@@ -258,36 +218,6 @@ export default function HomePage() {
         title="Explore Port Harcourt"
         properties={portHarcourtProperties}
         href="/shortlets?city=Port+Harcourt"
-      />
-      <CarouselSection
-        title="Stays in Ikoyi"
-        properties={ikoyiProperties}
-        href="/shortlets?city=Ikoyi"
-      />
-      <CarouselSection
-        title="Explore Ibadan"
-        properties={ibadanProperties}
-        href="/shortlets?city=Ibadan"
-      />
-      <CarouselSection
-        title="Stays in Ajah"
-        properties={ajahProperties}
-        href="/shortlets?city=Ajah"
-      />
-      <CarouselSection
-        title="Homes in Surulere"
-        properties={surulereProperties}
-        href="/shortlets?city=Surulere"
-      />
-      <CarouselSection
-        title="Explore Yaba"
-        properties={yabaProperties}
-        href="/shortlets?city=Yaba"
-      />
-      <CarouselSection
-        title="Stays in Enugu"
-        properties={enuguProperties}
-        href="/shortlets?city=Enugu"
       />
     </div>
   );

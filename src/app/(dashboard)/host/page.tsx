@@ -2,6 +2,7 @@
 
 import { CalendarDays, MessageSquare, TrendingUp } from "lucide-react";
 import { Card, CardHeader, CardBody, Badge, StatBar } from "@/components/ui";
+import { KYCBanner } from "@/components/kyc";
 import { formatCurrency, formatDate } from "@/lib/types";
 import { useWorkspace } from "@/context/WorkspaceContext";
 
@@ -47,6 +48,11 @@ export default function HostDashboardPage() {
         <p className="text-gray-500 mt-1 pl-5">
           Managing properties for {current.orgName}
         </p>
+      </div>
+
+      {/* KYC Banner */}
+      <div className="mb-6">
+        <KYCBanner />
       </div>
 
       {/* Stats */}

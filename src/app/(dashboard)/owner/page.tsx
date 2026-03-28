@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Building2, CalendarDays, TrendingUp, CreditCard, UserPlus } from "lucide-react";
 import { Card, CardHeader, Badge, StatBar } from "@/components/ui";
+import { KYCBanner } from "@/components/kyc";
 import { formatCurrency, formatDate } from "@/lib/types";
 import Link from "next/link";
 
@@ -34,6 +35,11 @@ export default function OwnerDashboardPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Welcome back!</h1>
         <p className="text-gray-500 mt-1 pl-5">Here is an overview of your properties and bookings.</p>
+      </div>
+
+      {/* KYC Banner */}
+      <div className="mb-6">
+        <KYCBanner />
       </div>
 
       {/* Stats */}

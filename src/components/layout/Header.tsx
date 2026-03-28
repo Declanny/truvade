@@ -80,14 +80,14 @@ export const Header: React.FC = () => {
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-[68px]">
             {/* Logo */}
-            <Link href="/" className="shrink-0">
+            <Link href="/" className="shrink-0 block">
               {transparent ? (
                 <>
-                  <Logo variant="dark" size="lg" className="lg:hidden" />
-                  <Logo variant="light" size="lg" className="hidden lg:block" />
+                  <Logo variant="dark" size="md" className="lg:hidden" />
+                  <Logo variant="light" size="md" className="hidden lg:block" />
                 </>
               ) : (
-                <Logo variant="dark" size="lg" />
+                <Logo variant="dark" size="md" />
               )}
             </Link>
 

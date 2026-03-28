@@ -10,6 +10,58 @@ export type PaymentStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED" | 
 
 export type InvitationStatus = "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED";
 
+// KYC Verification types
+export type KYCStatus = "NOT_STARTED" | "IN_PROGRESS" | "PENDING_REVIEW" | "APPROVED" | "REJECTED";
+
+export type KYCDocumentType = "NATIONAL_ID" | "PASSPORT" | "DRIVERS_LICENSE" | "VOTERS_CARD";
+
+export type KYCStepKey = "identity" | "address" | "business";
+
+export type InviteeRole = "HOST" | "CO_HOST";
+
+export type CoHostPermission = "manage_bookings" | "manage_messages" | "manage_calendar";
+
+export interface KYCStep {
+  key: KYCStepKey;
+  label: string;
+  description: string;
+  status: "pending" | "completed" | "failed";
+  required: boolean;
+}
+
+export interface KYCVerification {
+  id: string;
+  userId: string;
+  status: KYCStatus;
+  steps: KYCStep[];
+  documentType?: KYCDocumentType;
+  documentUrl?: string;
+  bvnOrNin?: string;
+  addressDocument?: string;
+  businessRegNumber?: string;
+  rejectionReason?: string;
+  submittedAt?: Date;
+  reviewedAt?: Date;
+  createdAt: Date;
+}
+
+export const KYC_STEPS_OWNER: KYCStep[] = [
+  { key: "identity", label: "Identity", description: "Government-issued ID & BVN/NIN", status: "pending", required: true },
+  { key: "address", label: "Address", description: "Proof of address", status: "pending", required: true },
+  { key: "business", label: "Business", description: "CAC registration", status: "pending", required: false },
+];
+
+export const KYC_STEPS_HOST: KYCStep[] = [
+  { key: "identity", label: "Identity", description: "Government-issued ID & BVN/NIN", status: "pending", required: true },
+  { key: "address", label: "Address", description: "Proof of address", status: "pending", required: true },
+];
+
+export const CO_HOST_PERMISSIONS: CoHostPermission[] = [
+  "manage_bookings",
+  "manage_messages",
+  "manage_calendar",
+];
+
 export interface User {
   id: string;
   email?: string;
@@ -18,6 +70,8 @@ export interface User {
   avatar?: string;
   roles: UserRole[];
   verified: boolean;
+  kycStatus: KYCStatus;
+  kycVerification?: KYCVerification;
   createdAt: Date;
 }
 
@@ -134,8 +188,16 @@ export interface HostInvitation {
   orgId: string;
   organization?: Organization;
   email: string;
+  name?: string;
+  role: InviteeRole;
   status: InvitationStatus;
   permissions: string[];
+  commission: number;
+  invitedBy: string;
+  token: string;
+  propertyIds?: string[];
+  acceptedAt?: Date;
+  acceptedByUserId?: string;
   createdAt: Date;
   expiresAt: Date;
 }
@@ -146,8 +208,12 @@ export interface HostMembership {
   user?: User;
   orgId: string;
   organization?: Organization;
+  role: InviteeRole;
   permissions: string[];
   commission: number;
+  invitationId: string;
+  propertyIds: string[];
+  status: "active" | "suspended";
   createdAt: Date;
 }
 

@@ -32,7 +32,7 @@ import {
 } from "lucide-react";
 import { Container } from "@/components/layout";
 import { Button, Badge, Card } from "@/components/ui";
-import { PropertyGallery, HostSection, BookingCalendar } from "@/components/property";
+import { PropertyGallery, HostSection, BookingCalendar, PropertyMap } from "@/components/property";
 import { mockProperties, mockBookings } from "@/lib/mock-data";
 import { formatCurrency, calculateNights } from "@/lib/types";
 
@@ -278,7 +278,7 @@ export default function PropertyDetailPage() {
               </div>
             </div>
 
-            {/* Map Placeholder */}
+            {/* Map */}
             <div className="py-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
                 Location
@@ -286,14 +286,13 @@ export default function PropertyDetailPage() {
               <p className="text-sm text-gray-600 mb-3">
                 {property.city}, {property.state}, {property.country}
               </p>
-              <div className="w-full h-64 md:h-80 bg-gray-100 rounded-xl flex items-center justify-center border border-gray-200">
-                <div className="text-center text-gray-400">
-                  <MapPin className="w-10 h-10 mx-auto mb-2" />
-                  <p className="text-sm font-medium">Map view</p>
-                  <p className="text-xs mt-1">
-                    Exact location provided after booking
-                  </p>
-                </div>
+              <div className="w-full h-64 md:h-80">
+                <PropertyMap
+                  lat={property.lat}
+                  lng={property.lng}
+                  city={property.city}
+                  state={property.state}
+                />
               </div>
             </div>
           </div>

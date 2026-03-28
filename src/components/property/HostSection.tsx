@@ -14,7 +14,9 @@ function hostSlug(name: string): string {
 }
 
 export const HostSection: React.FC<HostSectionProps> = ({ property }) => {
-  const hostInitials = property.hostAvatar || property.hostName?.split(" ").map(n => n[0]).join("").toUpperCase() || "T";
+  const hostAvatarIsUrl = property.hostAvatar?.startsWith("http");
+  const hostInitials = hostAvatarIsUrl ? undefined : (property.hostAvatar || property.hostName?.split(" ").map(n => n[0]).join("").toUpperCase() || "T");
+  const hostAvatarSrc = hostAvatarIsUrl ? property.hostAvatar : undefined;
   const hostName = property.hostName || "Truvade Managed";
   const hostProfileHref = `/hosts/${hostSlug(hostName)}`;
 
@@ -27,6 +29,7 @@ export const HostSection: React.FC<HostSectionProps> = ({ property }) => {
         <Link href={hostProfileHref} className="block lg:w-[280px] flex-shrink-0">
           <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm text-center hover:shadow-md transition-shadow">
             <Avatar
+              src={hostAvatarSrc}
               initials={hostInitials}
               name={hostName}
               size="xl"

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
+import { AuthProvider } from "@/context/AuthContext";
+import { DevUserSwitcher } from "@/components/kyc";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -21,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${manrope.variable} antialiased`}>
-        {children}
+        <AuthProvider>{children}<DevUserSwitcher /></AuthProvider>
       </body>
     </html>
   );
