@@ -16,7 +16,7 @@ import {
   Star,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/types";
-import { AMENITIES } from "@/lib/mock-data";
+import { AMENITIES, mockInvitations } from "@/lib/mock-data";
 
 // ─── Types ───────────────────────────────────────────────
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -35,6 +35,7 @@ interface ListingDraft {
   images: string[];
   basePrice: number;
   cleaningFee: number;
+  assignedHostId: string;
 }
 
 const PROPERTY_TYPES = [
@@ -88,6 +89,7 @@ const emptyDraft: ListingDraft = {
   images: [],
   basePrice: 0,
   cleaningFee: 0,
+  assignedHostId: "",
 };
 
 // ─── Counter ─────────────────────────────────────────────
@@ -432,7 +434,68 @@ export default function NewPropertyWizard() {
                 )}
               </div>
             </div>
-            <div className="mt-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+            {/* Host assignment */}
+            {(() => {
+              const verifiedHosts = mockInvitations.filter((inv) => inv.status === "ACCEPTED");
+              return (
+                <div className="mt-6 border border-gray-200 rounded-xl p-5">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Property host</h3>
+
+                  <div className="space-y-2">
+                    {/* Owner — default */}
+                    <button
+                      type="button"
+                      onClick={() => setDraft((d) => ({ ...d, assignedHostId: "" }))}
+                      className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+                        !draft.assignedHostId ? "border-[#0B3D2C] bg-[#0B3D2C]/5" : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-[#0B3D2C] flex items-center justify-center text-white text-xs font-medium shrink-0">You</div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">Me (Owner)</p>
+                        <p className="text-xs text-gray-500">I will host this property</p>
+                      </div>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                        !draft.assignedHostId ? "border-[#0B3D2C] bg-[#0B3D2C]" : "border-gray-300"
+                      }`}>
+                        {!draft.assignedHostId && <div className="w-2 h-2 rounded-full bg-white" />}
+                      </div>
+                    </button>
+
+                    {/* Verified hosts */}
+                    {verifiedHosts.map((inv) => (
+                      <button
+                        key={inv.id}
+                        type="button"
+                        onClick={() => setDraft((d) => ({ ...d, assignedHostId: inv.id }))}
+                        className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+                          draft.assignedHostId === inv.id ? "border-[#0B3D2C] bg-[#0B3D2C]/5" : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-xs font-medium shrink-0">
+                          {inv.name?.split(" ").map(n => n[0]).join("")}
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">{inv.name}</p>
+                          <p className="text-xs text-gray-500">{inv.role === "CO_HOST" ? "Co-Host" : "Host"} · {inv.commission}%</p>
+                        </div>
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                          draft.assignedHostId === inv.id ? "border-[#0B3D2C] bg-[#0B3D2C]" : "border-gray-300"
+                        }`}>
+                          {draft.assignedHostId === inv.id && <div className="w-2 h-2 rounded-full bg-white" />}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+
+                  {verifiedHosts.length === 0 && (
+                    <p className="text-xs text-gray-400 mt-3">You can add hosts from your Hosts page to assign them here.</p>
+                  )}
+                </div>
+              );
+            })()}
+
+            <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
               <div className="w-5 h-5 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <span className="text-white text-xs font-bold">!</span>
               </div>

@@ -90,8 +90,8 @@ export default function PropertyDetailPage() {
           <p className="text-gray-600 mb-6">
             The property you are looking for does not exist or has been removed.
           </p>
-          <Link href="/properties">
-            <Button variant="primary">Browse Properties</Button>
+          <Link href="/shortlets">
+            <Button variant="primary">Browse Shortlets</Button>
           </Link>
         </div>
       </Container>

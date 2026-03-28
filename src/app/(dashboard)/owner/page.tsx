@@ -31,7 +31,7 @@ const statusVariant: Record<string, "success" | "warning" | "info" | "gray"> = {
 
 export default function OwnerDashboardPage() {
   return (
-    <div className="max-w-7xl mx-auto">
+    <div>
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Welcome back!</h1>
         <p className="text-gray-500 mt-1 pl-5">Here is an overview of your properties and bookings.</p>

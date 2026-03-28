@@ -61,8 +61,8 @@ function BookingContent() {
           <p className="text-gray-600 mb-6">
             The property you are trying to book does not exist.
           </p>
-          <Link href="/properties">
-            <Button variant="primary">Browse Properties</Button>
+          <Link href="/shortlets">
+            <Button variant="primary">Browse Shortlets</Button>
           </Link>
         </div>
       </Container>
@@ -83,7 +83,7 @@ function BookingContent() {
     // In production, this would integrate with Stripe
     alert("Booking confirmed! (Demo mode - Stripe integration coming soon)");
     setIsSubmitting(false);
-    router.push("/properties");
+    router.push("/shortlets");
   };
 
   return (

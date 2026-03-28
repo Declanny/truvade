@@ -38,7 +38,7 @@ const statusVariant: Record<string, "success" | "warning" | "info"> = {
 
 export default function OwnerPayoutsPage() {
   return (
-    <div className="max-w-5xl mx-auto">
+    <div>
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Payouts</h1>
 
       {/* Summary */}

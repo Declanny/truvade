@@ -109,17 +109,34 @@ function PropertyListCard({ property, isFavorite, onFavorite, compact }: {
         <div className="flex-1 min-w-0 py-0.5 flex flex-col">
           {compact ? (
             <>
-              <h3 className="text-sm font-semibold text-gray-900 line-clamp-1">{property.title}</h3>
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="text-sm font-semibold text-gray-900 line-clamp-1">{property.title}</h3>
+                {property.rating && (
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Star className="w-3 h-3 fill-black text-black" />
+                    <span className="text-xs font-medium text-gray-900">{property.rating.toFixed(1)}</span>
+                  </div>
+                )}
+              </div>
               <p className="text-xs text-gray-500 mt-0.5">{property.city}</p>
+              <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500">
+                <span className="flex items-center gap-1"><BedDouble className="w-3 h-3" /> {property.bedrooms}</span>
+                <span className="flex items-center gap-1"><Bath className="w-3 h-3" /> {property.bathrooms}</span>
+                <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {property.maxGuests}</span>
+              </div>
               <div className="flex items-center justify-between mt-auto pt-1.5">
                 <p className="text-sm text-gray-900">
                   <span className="font-semibold">{formatCurrency(property.basePrice)}</span>
                   <span className="text-xs text-gray-500"> / night</span>
                 </p>
-                {property.rating && (
-                  <div className="flex items-center gap-1">
-                    <Star className="w-3 h-3 fill-black text-black" />
-                    <span className="text-xs font-medium text-gray-900">{property.rating.toFixed(1)}</span>
+                {property.hostName && (
+                  <div className="flex items-center gap-1.5">
+                    {property.hostAvatar?.startsWith("http") ? (
+                      <img src={property.hostAvatar} alt="" className="w-5 h-5 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-5 h-5 rounded-full bg-[#0B3D2C] flex items-center justify-center text-white text-[7px] font-medium">{property.hostAvatar}</div>
+                    )}
+                    <span className="text-[11px] text-gray-500">{property.hostName.split(" ")[0]}</span>
                   </div>
                 )}
               </div>

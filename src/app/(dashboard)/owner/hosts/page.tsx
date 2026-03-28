@@ -168,7 +168,7 @@ export default function OwnerHostsPage() {
   const pendingHosts = hosts.filter((h) => h.status === "pending");
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div>
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Hosts</h1>
@@ -345,7 +345,7 @@ export default function OwnerHostsPage() {
           <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
             Active Hosts
           </h2>
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {activeHosts.map((host, i) => (
               <HostCard
                 key={host.id}
@@ -373,7 +373,7 @@ export default function OwnerHostsPage() {
           <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
             Pending Invitations
           </h2>
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {pendingHosts.map((host, i) => (
               <PendingHostCard
                 key={host.id}

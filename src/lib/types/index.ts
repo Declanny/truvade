@@ -15,7 +15,7 @@ export type KYCStatus = "NOT_STARTED" | "IN_PROGRESS" | "PENDING_REVIEW" | "APPR
 
 export type KYCDocumentType = "NATIONAL_ID" | "PASSPORT" | "DRIVERS_LICENSE" | "VOTERS_CARD";
 
-export type KYCStepKey = "identity" | "address" | "business";
+export type KYCStepKey = "identity" | "address";
 
 export type InviteeRole = "HOST" | "CO_HOST";
 
@@ -38,7 +38,6 @@ export interface KYCVerification {
   documentUrl?: string;
   bvnOrNin?: string;
   addressDocument?: string;
-  businessRegNumber?: string;
   rejectionReason?: string;
   submittedAt?: Date;
   reviewedAt?: Date;
@@ -48,7 +47,6 @@ export interface KYCVerification {
 export const KYC_STEPS_OWNER: KYCStep[] = [
   { key: "identity", label: "Identity", description: "Government-issued ID & BVN/NIN", status: "pending", required: true },
   { key: "address", label: "Address", description: "Proof of address", status: "pending", required: true },
-  { key: "business", label: "Business", description: "CAC registration", status: "pending", required: false },
 ];
 
 export const KYC_STEPS_HOST: KYCStep[] = [
@@ -124,6 +122,7 @@ export interface Property {
     name: string;
     avatar?: string;
   }>;
+  hostId?: string;
   orgId: string;
   organization?: Organization;
   createdAt: Date;

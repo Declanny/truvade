@@ -106,7 +106,7 @@ export default function HostCalendarPage() {
   for (let d = 1; d <= daysInMonth; d++) calendarCells.push(d);
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div>
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Availability Calendar</h1>
 
       {/* Property Selector */}

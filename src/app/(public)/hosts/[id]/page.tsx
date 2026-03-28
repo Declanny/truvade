@@ -162,33 +162,41 @@ export default function HostProfilePage() {
                 <p className="text-gray-600 leading-relaxed">{host.bio}</p>
               </section>
 
-              {/* Co-hosts */}
-              {host.coHosts.length > 0 && (
-                <section className="mb-10 pb-10 border-b border-gray-200">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Co-hosts</h2>
-                  <div className="flex items-center gap-4">
-                    {host.coHosts.map((co) => (
-                      <div key={co.name} className="flex items-center gap-2.5">
-                        <Avatar initials={co.initials} name={co.name} size="sm" />
-                        <span className="text-sm text-gray-700">{co.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {/* Host details */}
+              {/* Message host */}
               <section className="mb-10 pb-10 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Host details</h2>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <p>Response rate: {host.responseRate}</p>
-                  <p>Responds {host.responseTime}</p>
-                </div>
-                <Link href="/account/guest/messages" className="inline-block mt-5">
+                <Link href="/account/guest/messages" className="inline-block">
                   <Button variant="outline" size="lg" leftIcon={<MessageSquare className="w-4 h-4" />}>
                     Message {host.name.split(" ")[0]}
                   </Button>
                 </Link>
+              </section>
+
+              {/* Past trips with this host */}
+              <section className="mb-10 pb-10 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                  Your past trips with {host.name.split(" ")[0]}
+                </h2>
+                <div className="space-y-3">
+                  {[
+                    { property: "Luxury 3-Bedroom Apartment with Ocean View", city: "Victoria Island", checkIn: "Dec 15, 2025", checkOut: "Dec 20, 2025", image: mockProperties[0]?.images[0] },
+                    { property: "Cozy Studio in the Heart of Lekki", city: "Lekki", checkIn: "Oct 3, 2025", checkOut: "Oct 7, 2025", image: mockProperties[1]?.images[0] },
+                    { property: "Luxury 3-Bedroom Apartment with Ocean View", city: "Victoria Island", checkIn: "Aug 22, 2025", checkOut: "Aug 25, 2025", image: mockProperties[0]?.images[1] },
+                  ].map((trip, i) => (
+                    <div key={i} className="flex gap-4 p-3 rounded-xl border border-gray-200">
+                      <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0">
+                        <div
+                          className="w-full h-full bg-gray-200"
+                          style={{ backgroundImage: `url(${trip.image})`, backgroundSize: "cover", backgroundPosition: "center" }}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 line-clamp-1">{trip.property}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{trip.city}</p>
+                        <p className="text-xs text-gray-400 mt-1">{trip.checkIn} — {trip.checkOut}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </section>
 
               {/* Listings */}

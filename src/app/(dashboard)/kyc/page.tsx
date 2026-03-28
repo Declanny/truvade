@@ -7,7 +7,6 @@ import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { KYCIdentityStep } from "@/components/kyc/KYCIdentityStep";
 import { KYCAddressStep } from "@/components/kyc/KYCAddressStep";
-import { KYCBusinessStep } from "@/components/kyc/KYCBusinessStep";
 import { KYCReviewScreen } from "@/components/kyc/KYCReviewScreen";
 import { KYC_STEPS_OWNER, KYC_STEPS_HOST } from "@/lib/types";
 
@@ -30,7 +29,7 @@ export default function KYCPage() {
   // Status screens
   if (user.kycStatus === "PENDING_REVIEW" || user.kycStatus === "APPROVED" || user.kycStatus === "REJECTED") {
     return (
-      <div className="max-w-md mx-auto py-12">
+      <div className="max-w-xl mx-auto py-12">
         <KYCReviewScreen
           status={user.kycStatus}
           rejectionReason={user.kycVerification?.rejectionReason}
@@ -58,14 +57,6 @@ export default function KYCPage() {
     }
   };
 
-  const handleSkipStep = () => {
-    if (currentStepIndex < totalSteps - 1) {
-      setCurrentStepIndex(currentStepIndex + 1);
-    } else {
-      updateKYCStatus("PENDING_REVIEW");
-    }
-  };
-
   const handleBack = () => {
     if (currentStepIndex > 0) {
       setCurrentStepIndex(currentStepIndex - 1);
@@ -75,7 +66,7 @@ export default function KYCPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto py-8">
+    <div className="max-w-3xl mx-auto py-8">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button
@@ -116,9 +107,6 @@ export default function KYCPage() {
           )}
           {currentStep.key === "address" && (
             <KYCAddressStep onComplete={handleStepComplete} />
-          )}
-          {currentStep.key === "business" && (
-            <KYCBusinessStep onComplete={handleStepComplete} onSkip={handleSkipStep} />
           )}
         </motion.div>
       </AnimatePresence>

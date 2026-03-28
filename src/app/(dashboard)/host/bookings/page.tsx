@@ -70,7 +70,7 @@ export default function HostBookingsPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div>
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Bookings</h1>
         <p className="text-sm text-gray-500 mt-1">{bookings.length} total reservations</p>

@@ -23,10 +23,10 @@ export default function OrganizationSettingsPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div>
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Organization Settings</h1>
 
-      <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* General Info */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <Card variant="bordered" padding="lg">
@@ -44,32 +44,24 @@ export default function OrganizationSettingsPage() {
                 fullWidth
               />
 
-              {/* Logo Upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Organization Logo
                 </label>
                 <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-[#0B3D2C] hover:bg-[#0B3D2C]/5 transition-colors cursor-pointer">
-                  <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-600">
-                    Click to upload or drag and drop
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    PNG, JPG up to 2MB. Recommended 200x200px.
-                  </p>
+                  <Upload className="w-6 h-6 text-gray-400 mx-auto mb-1.5" />
+                  <p className="text-sm text-gray-600">Click to upload</p>
+                  <p className="text-xs text-gray-400 mt-0.5">PNG, JPG up to 2MB</p>
                 </div>
               </div>
 
-              {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Description
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={4}
-                  className="block w-full bg-white border border-gray-300 rounded-[var(--radius-button)] px-4 py-2.5 text-gray-900 placeholder-gray-400 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:border-[#0B3D2C] focus:ring-[#0B3D2C] resize-none"
+                  className="block w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:border-[#0B3D2C] resize-none"
                   placeholder="Describe your organization..."
                 />
               </div>
@@ -113,19 +105,19 @@ export default function OrganizationSettingsPage() {
             </CardBody>
           </Card>
         </motion.div>
+      </div>
 
-        {/* Save Button */}
-        <div className="flex justify-end">
-          <Button
-            variant="primary"
-            size="lg"
-            leftIcon={<Save className="w-4 h-4" />}
-            loading={saving}
-            onClick={handleSave}
-          >
-            Save Changes
-          </Button>
-        </div>
+      {/* Save Button */}
+      <div className="flex justify-end mt-6">
+        <Button
+          variant="primary"
+          size="lg"
+          leftIcon={<Save className="w-4 h-4" />}
+          loading={saving}
+          onClick={handleSave}
+        >
+          Save Changes
+        </Button>
       </div>
     </div>
   );
