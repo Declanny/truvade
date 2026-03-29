@@ -123,7 +123,7 @@ export default function HostBookingsPage() {
               <p className="text-sm text-gray-400 mt-1">Bookings will appear here when guests make reservations</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
               {filtered.map((booking, i) => {
                 const status = statusConfig[booking.status];
                 return (

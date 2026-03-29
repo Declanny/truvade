@@ -21,6 +21,7 @@ const ownerNav: NavItem[] = [
 
 const hostNav: NavItem[] = [
   { label: "Today", href: "/host" },
+  { label: "Properties", href: "/host/properties" },
   { label: "Calendar", href: "/host/calendar" },
   { label: "Bookings", href: "/host/bookings" },
   { label: "Messages", href: "/host/messages" },
