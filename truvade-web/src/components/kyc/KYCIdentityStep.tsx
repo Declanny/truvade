@@ -68,7 +68,6 @@ function UploadCard({ label, placeholder, file, preview, onFileChange, onClear }
 
 export function KYCIdentityStep({ onComplete }: KYCIdentityStepProps) {
   const [docType, setDocType] = useState<KYCDocumentType | "">("");
-  const [bvnOrNin, setBvnOrNin] = useState("");
   const [frontFile, setFrontFile] = useState<File | null>(null);
   const [frontPreview, setFrontPreview] = useState<string | null>(null);
   const [backFile, setBackFile] = useState<File | null>(null);
@@ -76,7 +75,7 @@ export function KYCIdentityStep({ onComplete }: KYCIdentityStepProps) {
   const [uploading, setUploading] = useState(false);
 
   const needsBack = docType !== "PASSPORT" && docType !== "";
-  const canSubmit = docType && frontFile && bvnOrNin.length >= 10 && (!needsBack || backFile);
+  const canSubmit = docType && frontFile && (!needsBack || backFile);
 
   const handleFrontChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -95,28 +94,14 @@ export function KYCIdentityStep({ onComplete }: KYCIdentityStepProps) {
 
   return (
     <div className="border border-gray-200 rounded-xl p-6">
-      <h2 className="text-lg font-semibold text-gray-900">Verification required</h2>
+      <h2 className="text-lg font-semibold text-gray-900">Government ID</h2>
       <p className="text-sm text-gray-500 mt-1 mb-6">
-        Provide your BVN or NIN and upload both sides of your government-issued ID.
+        Choose your ID type and upload both sides of your government-issued ID.
       </p>
 
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Left — Form fields */}
         <div className="lg:w-[320px] shrink-0">
-          {/* BVN / NIN */}
-          <div className="mb-5">
-            <label className="block text-sm font-medium text-gray-700 mb-2">BVN or NIN</label>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={bvnOrNin}
-              onChange={(e) => setBvnOrNin(e.target.value.replace(/\D/g, "").slice(0, 11))}
-              placeholder="Enter your 11-digit BVN or NIN"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#0B3D2C] transition-colors"
-            />
-            <p className="text-xs text-gray-400 mt-1.5">Kept secure and encrypted.</p>
-          </div>
-
           {/* Document type */}
           <div className="mb-5">
             <label className="block text-sm font-medium text-gray-700 mb-3">Choose your document type</label>
