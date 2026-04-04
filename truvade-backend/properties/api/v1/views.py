@@ -2,7 +2,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 
 from core.utils.responses import success_response
 from properties.domain.selectors import get_properties_for_owner
@@ -11,7 +11,7 @@ from properties.domain.services import (
     delete_property_image,
     publish_property,
 )
-from properties.models import PropertyImage
+from properties.models import Property, PropertyImage
 
 from .permissions import IsOwner
 from .serializers import PropertyCreateSerializer, PropertySerializer
@@ -25,6 +25,7 @@ from .serializers import PropertyCreateSerializer, PropertySerializer
 class PropertyViewSet(viewsets.ModelViewSet):
     permission_classes = [IsOwner]
     serializer_class = PropertySerializer
+    queryset = Property.objects.none()
 
     def get_queryset(self):
         return get_properties_for_owner(owner=self.request.user)
@@ -83,6 +84,11 @@ class PropertyViewSet(viewsets.ModelViewSet):
             PropertySerializer(prop).data,
         )
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("image_id", int, OpenApiParameter.PATH),
+        ],
+    )
     @action(
         detail=True,
         methods=["delete"],
