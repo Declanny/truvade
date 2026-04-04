@@ -1,4 +1,10 @@
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+import uuid
+
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    BaseUserManager,
+    PermissionsMixin,
+)
 from django.db import models
 from django.utils import timezone
 
@@ -47,6 +53,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
+    @property
+    def is_verified(self):
+        return self.verifications.filter(status="APPROVED").exists()
+
     def __str__(self):
         return self.email
 
@@ -62,3 +72,97 @@ class OTP(models.Model):
 
     def __str__(self):
         return f"OTP for {self.user.email}"
+
+
+class Invitation(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Pending"
+        ACCEPTED = "ACCEPTED", "Accepted"
+        DECLINED = "DECLINED", "Declined"
+        EXPIRED = "EXPIRED", "Expired"
+
+    owner = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="sent_invitations"
+    )
+    email = models.EmailField()
+    token = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True)
+    status = models.CharField(
+        max_length=10, choices=Status.choices, default=Status.PENDING
+    )
+    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    @property
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+
+    def __str__(self):
+        return f"Invitation from {self.owner.email} to {self.email}"
+
+
+class OwnerHostMembership(models.Model):
+    owner = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="host_memberships"
+    )
+    host = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="owner_memberships"
+    )
+    invitation = models.OneToOneField(
+        Invitation,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="membership",
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [("owner", "host")]
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.host.email} works for {self.owner.email}"
+
+
+class IdentityVerification(models.Model):
+    class VerificationType(models.TextChoices):
+        BVN = "BVN", "Bank Verification Number"
+        NIN = "NIN", "National Identification Number"
+
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Pending"
+        APPROVED = "APPROVED", "Approved"
+        REJECTED = "REJECTED", "Rejected"
+
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="verifications"
+    )
+    verification_type = models.CharField(max_length=3, choices=VerificationType.choices)
+    id_number = models.CharField(max_length=20)
+    id_document = models.ImageField(upload_to="verifications/documents/")
+    selfie = models.ImageField(upload_to="verifications/selfies/")
+    status = models.CharField(
+        max_length=10, choices=Status.choices, default=Status.PENDING
+    )
+    admin_notes = models.TextField(blank=True)
+    reviewed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reviewed_verifications",
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.verification_type} verification for {self.user.email}"

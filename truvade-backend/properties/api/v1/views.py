@@ -15,7 +15,11 @@ from properties.domain.services import (
 from properties.models import Shortlet, ShortletImage
 
 from .permissions import IsOwner
-from .serializers import ShortletCreateSerializer, ShortletImageSerializer, ShortletSerializer
+from .serializers import (
+    ShortletCreateSerializer,
+    ShortletImageSerializer,
+    ShortletSerializer,
+)
 
 
 @extend_schema(
@@ -91,6 +95,7 @@ class ShortletViewSet(viewsets.ModelViewSet):
         images = request.FILES.getlist("images")
         if not images:
             from rest_framework.exceptions import ValidationError
+
             raise ValidationError({"images": ["At least 1 image file is required."]})
         created = upload_shortlet_images(shortlet=shortlet, images=images)
         serializer = ShortletImageSerializer(created, many=True)

@@ -16,12 +16,32 @@ class ShortletSerializer(serializers.ModelSerializer):
     class Meta:
         model = Shortlet
         fields = [
-            "id", "owner", "title", "description", "shortlet_type",
-            "address", "city", "state", "country", "latitude", "longitude",
-            "bedrooms", "bathrooms", "max_guests", "min_nights",
-            "base_price", "cleaning_fee", "currency", "amenities",
-            "status", "featured", "verified", "guest_favorite",
-            "images", "created_at", "updated_at",
+            "id",
+            "owner",
+            "title",
+            "description",
+            "shortlet_type",
+            "address",
+            "city",
+            "state",
+            "country",
+            "latitude",
+            "longitude",
+            "bedrooms",
+            "bathrooms",
+            "max_guests",
+            "min_nights",
+            "base_price",
+            "cleaning_fee",
+            "currency",
+            "amenities",
+            "status",
+            "featured",
+            "verified",
+            "guest_favorite",
+            "images",
+            "created_at",
+            "updated_at",
         ]
         read_only_fields = ["id", "owner", "created_at", "updated_at"]
 

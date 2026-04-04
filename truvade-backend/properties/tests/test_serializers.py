@@ -1,6 +1,6 @@
 import pytest
 
-from properties.models import Shortlet, ShortletImage
+from properties.models import ShortletImage
 from properties.api.v1.serializers import ShortletSerializer, ShortletCreateSerializer
 
 

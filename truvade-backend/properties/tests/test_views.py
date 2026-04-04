@@ -101,8 +101,8 @@ class TestShortletCRUD:
 
 @pytest.mark.django_db
 class TestShortletStepByStepFlow:
-    def test_full_listing_flow(self, api_client, owner):
-        api_client.force_authenticate(user=owner)
+    def test_full_listing_flow(self, api_client, verified_owner):
+        api_client.force_authenticate(user=verified_owner)
 
         # Step 1: Create with only shortlet type
         resp = api_client.post(
@@ -138,8 +138,8 @@ class TestShortletStepByStepFlow:
         assert resp.status_code == status.HTTP_200_OK
         assert resp.data["data"]["status"] == "PENDING"
 
-    def test_cannot_publish_incomplete_draft(self, api_client, owner):
-        api_client.force_authenticate(user=owner)
+    def test_cannot_publish_incomplete_draft(self, api_client, verified_owner):
+        api_client.force_authenticate(user=verified_owner)
 
         # Create minimal draft
         resp = api_client.post(
@@ -165,15 +165,15 @@ class TestShortletStepByStepFlow:
 class TestShortletPublish:
     def test_publish_shortlet(self, api_client, owner, publishable_shortlet):
         api_client.force_authenticate(user=owner)
-        resp = api_client.post(
-            f"/api/v1/shortlets/{publishable_shortlet.id}/publish/"
-        )
+        resp = api_client.post(f"/api/v1/shortlets/{publishable_shortlet.id}/publish/")
         assert resp.status_code == status.HTTP_200_OK
         publishable_shortlet.refresh_from_db()
         assert publishable_shortlet.status == "PENDING"
 
-    def test_publish_without_enough_images(self, api_client, owner, draft_shortlet):
-        api_client.force_authenticate(user=owner)
+    def test_publish_without_enough_images(
+        self, api_client, verified_owner, draft_shortlet
+    ):
+        api_client.force_authenticate(user=verified_owner)
         resp = api_client.post(f"/api/v1/shortlets/{draft_shortlet.id}/publish/")
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
         assert "images" in str(resp.data["error"]).lower()
@@ -182,27 +182,21 @@ class TestShortletPublish:
         publishable_shortlet.description = ""
         publishable_shortlet.save()
         api_client.force_authenticate(user=owner)
-        resp = api_client.post(
-            f"/api/v1/shortlets/{publishable_shortlet.id}/publish/"
-        )
+        resp = api_client.post(f"/api/v1/shortlets/{publishable_shortlet.id}/publish/")
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_publish_without_amenities(self, api_client, owner, publishable_shortlet):
         publishable_shortlet.amenities = []
         publishable_shortlet.save()
         api_client.force_authenticate(user=owner)
-        resp = api_client.post(
-            f"/api/v1/shortlets/{publishable_shortlet.id}/publish/"
-        )
+        resp = api_client.post(f"/api/v1/shortlets/{publishable_shortlet.id}/publish/")
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_cannot_publish_non_draft(self, api_client, owner, publishable_shortlet):
         publishable_shortlet.status = "ACTIVE"
         publishable_shortlet.save()
         api_client.force_authenticate(user=owner)
-        resp = api_client.post(
-            f"/api/v1/shortlets/{publishable_shortlet.id}/publish/"
-        )
+        resp = api_client.post(f"/api/v1/shortlets/{publishable_shortlet.id}/publish/")
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
 
@@ -216,7 +210,9 @@ class TestShortletImageUpload:
 
         api_client.force_authenticate(user=owner)
         files = [
-            SimpleUploadedFile(f"img{i}.jpg", b"fake-image-data", content_type="image/jpeg")
+            SimpleUploadedFile(
+                f"img{i}.jpg", b"fake-image-data", content_type="image/jpeg"
+            )
             for i in range(3)
         ]
         resp = api_client.post(
@@ -267,9 +263,7 @@ class TestShortletImageDelete:
         assert resp.status_code == status.HTTP_204_NO_CONTENT
         assert ShortletImage.objects.count() == 0
 
-    def test_cannot_delete_others_image(
-        self, api_client, other_owner, draft_shortlet
-    ):
+    def test_cannot_delete_others_image(self, api_client, other_owner, draft_shortlet):
         image = ShortletImage.objects.create(
             shortlet=draft_shortlet, image="shortlets/test.jpg", order=0
         )

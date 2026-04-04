@@ -6,21 +6,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('properties', '0002_rename_property_to_shortlet'),
+        ("properties", "0002_rename_property_to_shortlet"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='shortlet',
-            name='owner',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='shortlets', to=settings.AUTH_USER_MODEL),
+            model_name="shortlet",
+            name="owner",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="shortlets",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AlterField(
-            model_name='shortletimage',
-            name='image',
-            field=models.ImageField(upload_to='shortlets/'),
+            model_name="shortletimage",
+            name="image",
+            field=models.ImageField(upload_to="shortlets/"),
         ),
     ]

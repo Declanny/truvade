@@ -2,6 +2,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
+from accounts.models import IdentityVerification
 from properties.models import Shortlet, ShortletImage
 
 User = get_user_model()
@@ -69,10 +70,24 @@ def draft_shortlet(owner):
 
 
 @pytest.fixture
-def publishable_shortlet(owner):
+def verified_owner(owner):
+    """An owner who has completed identity verification."""
+    IdentityVerification.objects.create(
+        user=owner,
+        verification_type="BVN",
+        id_number="12345678901",
+        id_document="verifications/documents/test.jpg",
+        selfie="verifications/selfies/test.jpg",
+        status="APPROVED",
+    )
+    return owner
+
+
+@pytest.fixture
+def publishable_shortlet(verified_owner):
     """A shortlet with all required fields to be published (including 5+ images)."""
     shortlet = Shortlet.objects.create(
-        owner=owner,
+        owner=verified_owner,
         title="Ready Apartment",
         description="A beautiful place to stay",
         shortlet_type="apartment",

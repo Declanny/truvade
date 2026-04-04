@@ -93,8 +93,12 @@ class TestShortletImageModel:
 
     def test_images_ordered(self, shortlet_data):
         shortlet = Shortlet.objects.create(**shortlet_data)
-        ShortletImage.objects.create(shortlet=shortlet, image="shortlets/b.jpg", order=1)
-        ShortletImage.objects.create(shortlet=shortlet, image="shortlets/a.jpg", order=0)
+        ShortletImage.objects.create(
+            shortlet=shortlet, image="shortlets/b.jpg", order=1
+        )
+        ShortletImage.objects.create(
+            shortlet=shortlet, image="shortlets/a.jpg", order=0
+        )
         images = list(shortlet.images.all())
         assert images[0].order == 0
         assert images[1].order == 1
@@ -108,7 +112,9 @@ class TestShortletImageModel:
 
     def test_cascade_delete(self, shortlet_data):
         shortlet = Shortlet.objects.create(**shortlet_data)
-        ShortletImage.objects.create(shortlet=shortlet, image="shortlets/test.jpg", order=0)
+        ShortletImage.objects.create(
+            shortlet=shortlet, image="shortlets/test.jpg", order=0
+        )
         assert ShortletImage.objects.count() == 1
         shortlet.delete()
         assert ShortletImage.objects.count() == 0

@@ -17,6 +17,11 @@ def check_shortlet_editable(*, shortlet):
 
 @transaction.atomic
 def publish_shortlet(*, shortlet):
+    if not shortlet.owner.is_verified:
+        raise ValidationError(
+            "You must complete identity verification before publishing."
+        )
+
     if shortlet.status != "DRAFT":
         raise ValidationError("Only DRAFT shortlets can be published.")
 

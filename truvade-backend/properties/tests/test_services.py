@@ -94,20 +94,48 @@ class TestPublishShortlet:
         with pytest.raises(ValidationError, match="amenity"):
             publish_shortlet(shortlet=publishable_shortlet)
 
-    def test_raises_without_enough_images(self, draft_shortlet):
-        draft_shortlet.description = "Some description"
-        draft_shortlet.save()
-        with pytest.raises(ValidationError, match="images"):
-            publish_shortlet(shortlet=draft_shortlet)
-
-    def test_collects_multiple_errors(self, owner):
+    def test_raises_without_enough_images(self, verified_owner):
         shortlet = Shortlet.objects.create(
-            owner=owner, shortlet_type="apartment"
+            owner=verified_owner,
+            title="Draft Apartment",
+            description="Some description",
+            shortlet_type="apartment",
+            city="Victoria Island",
+            state="Lagos",
+            bedrooms=3,
+            bathrooms=2,
+            max_guests=6,
+            base_price=85000,
+            amenities=["WiFi", "Pool"],
+        )
+        with pytest.raises(ValidationError, match="images"):
+            publish_shortlet(shortlet=shortlet)
+
+    def test_collects_multiple_errors(self, verified_owner):
+        shortlet = Shortlet.objects.create(
+            owner=verified_owner, shortlet_type="apartment"
         )
         with pytest.raises(ValidationError) as exc_info:
             publish_shortlet(shortlet=shortlet)
         messages = exc_info.value.messages
         assert len(messages) == 6
+
+    def test_raises_if_owner_not_verified(self, owner):
+        shortlet = Shortlet.objects.create(
+            owner=owner,
+            title="Test",
+            description="Test description",
+            shortlet_type="apartment",
+            city="Lagos",
+            base_price=50000,
+            amenities=["WiFi"],
+        )
+        for i in range(5):
+            ShortletImage.objects.create(
+                shortlet=shortlet, image=f"shortlets/img{i}.jpg", order=i
+            )
+        with pytest.raises(ValidationError, match="identity verification"):
+            publish_shortlet(shortlet=shortlet)
 
 
 @pytest.mark.django_db
@@ -116,7 +144,9 @@ class TestUploadShortletImages:
         from django.core.files.uploadedfile import SimpleUploadedFile
 
         files = [
-            SimpleUploadedFile(f"img{i}.jpg", b"fake-image-data", content_type="image/jpeg")
+            SimpleUploadedFile(
+                f"img{i}.jpg", b"fake-image-data", content_type="image/jpeg"
+            )
             for i in range(3)
         ]
         created = upload_shortlet_images(shortlet=draft_shortlet, images=files)
