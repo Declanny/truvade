@@ -206,11 +206,56 @@ class TestShortletPublish:
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
 
-# --- Images ---
+# --- Image Upload ---
 
 
 @pytest.mark.django_db
-class TestShortletImages:
+class TestShortletImageUpload:
+    def test_upload_images(self, api_client, owner, draft_shortlet):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        api_client.force_authenticate(user=owner)
+        files = [
+            SimpleUploadedFile(f"img{i}.jpg", b"fake-image-data", content_type="image/jpeg")
+            for i in range(3)
+        ]
+        resp = api_client.post(
+            f"/api/v1/shortlets/{draft_shortlet.id}/upload-images/",
+            {"images": files},
+            format="multipart",
+        )
+        assert resp.status_code == status.HTTP_201_CREATED
+        assert len(resp.data["data"]) == 3
+
+    def test_upload_no_files_returns_error(self, api_client, owner, draft_shortlet):
+        api_client.force_authenticate(user=owner)
+        resp = api_client.post(
+            f"/api/v1/shortlets/{draft_shortlet.id}/upload-images/",
+            {},
+            format="multipart",
+        )
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_cannot_upload_to_others_shortlet(
+        self, api_client, other_owner, draft_shortlet
+    ):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        api_client.force_authenticate(user=other_owner)
+        files = [SimpleUploadedFile("img.jpg", b"fake", content_type="image/jpeg")]
+        resp = api_client.post(
+            f"/api/v1/shortlets/{draft_shortlet.id}/upload-images/",
+            {"images": files},
+            format="multipart",
+        )
+        assert resp.status_code == status.HTTP_404_NOT_FOUND
+
+
+# --- Image Delete ---
+
+
+@pytest.mark.django_db
+class TestShortletImageDelete:
     def test_delete_image(self, api_client, owner, draft_shortlet):
         image = ShortletImage.objects.create(
             shortlet=draft_shortlet, image="shortlets/test.jpg", order=0

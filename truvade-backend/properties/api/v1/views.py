@@ -10,11 +10,12 @@ from properties.domain.services import (
     check_shortlet_editable,
     delete_shortlet_image,
     publish_shortlet,
+    upload_shortlet_images,
 )
 from properties.models import Shortlet, ShortletImage
 
 from .permissions import IsOwner
-from .serializers import ShortletCreateSerializer, ShortletSerializer
+from .serializers import ShortletCreateSerializer, ShortletImageSerializer, ShortletSerializer
 
 
 @extend_schema(
@@ -82,6 +83,21 @@ class ShortletViewSet(viewsets.ModelViewSet):
         return success_response(
             "Shortlet published successfully.",
             ShortletSerializer(shortlet).data,
+        )
+
+    @action(detail=True, methods=["post"], url_path="upload-images")
+    def upload_images(self, request, pk=None):
+        shortlet = self.get_object()
+        images = request.FILES.getlist("images")
+        if not images:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({"images": ["At least 1 image file is required."]})
+        created = upload_shortlet_images(shortlet=shortlet, images=images)
+        serializer = ShortletImageSerializer(created, many=True)
+        return success_response(
+            "Images uploaded successfully.",
+            serializer.data,
+            status_code=status.HTTP_201_CREATED,
         )
 
     @extend_schema(

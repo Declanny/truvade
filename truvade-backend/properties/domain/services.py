@@ -43,6 +43,19 @@ def publish_shortlet(*, shortlet):
 
 
 @transaction.atomic
+def upload_shortlet_images(*, shortlet, images):
+    created = []
+    next_order = shortlet.images.count()
+    for image in images:
+        obj = ShortletImage.objects.create(
+            shortlet=shortlet, image=image, order=next_order
+        )
+        created.append(obj)
+        next_order += 1
+    return created
+
+
+@transaction.atomic
 def delete_shortlet_image(*, shortlet, image_id):
     try:
         image = shortlet.images.get(id=image_id)

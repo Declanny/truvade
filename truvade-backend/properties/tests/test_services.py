@@ -6,6 +6,7 @@ from properties.domain.services import (
     create_shortlet,
     delete_shortlet_image,
     publish_shortlet,
+    upload_shortlet_images,
 )
 from properties.models import Shortlet, ShortletImage
 
@@ -107,6 +108,32 @@ class TestPublishShortlet:
             publish_shortlet(shortlet=shortlet)
         messages = exc_info.value.messages
         assert len(messages) == 6
+
+
+@pytest.mark.django_db
+class TestUploadShortletImages:
+    def test_creates_images_with_correct_order(self, draft_shortlet):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        files = [
+            SimpleUploadedFile(f"img{i}.jpg", b"fake-image-data", content_type="image/jpeg")
+            for i in range(3)
+        ]
+        created = upload_shortlet_images(shortlet=draft_shortlet, images=files)
+        assert len(created) == 3
+        assert [img.order for img in created] == [0, 1, 2]
+
+    def test_appends_to_existing_images(self, draft_shortlet):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        ShortletImage.objects.create(
+            shortlet=draft_shortlet, image="shortlets/existing.jpg", order=0
+        )
+        files = [
+            SimpleUploadedFile("new.jpg", b"fake-image-data", content_type="image/jpeg")
+        ]
+        created = upload_shortlet_images(shortlet=draft_shortlet, images=files)
+        assert created[0].order == 1
 
 
 @pytest.mark.django_db
