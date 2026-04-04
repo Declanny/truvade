@@ -35,7 +35,7 @@ export const Modal: React.FC<ModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center p-4 text-center sm:p-0"
         onClick={(e) => { if (closeOnOverlayClick && e.target === e.currentTarget) onClose(); }}>
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" />
+        <div className="fixed inset-0 bg-black/40 transition-opacity" />
         <div className={`relative bg-white rounded-[var(--radius-button)] text-left shadow-xl transition-all w-full ${sizeStyles[size]}`}>
           {(title || showCloseButton) && (
             <div className="flex items-center justify-between p-6 border-b border-gray-200">

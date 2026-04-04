@@ -7,7 +7,7 @@ import { formatCurrency, formatDate } from "@/lib/types";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import Link from "next/link";
 
-type DatePreset = "today" | "yesterday" | "7d" | "30d" | "90d";
+type DatePreset = "today" | "yesterday" | "7d" | "30d" | "90d" | "custom";
 
 const presets: { key: DatePreset; label: string }[] = [
   { key: "today", label: "Today" },

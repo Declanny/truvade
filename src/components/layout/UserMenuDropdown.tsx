@@ -7,6 +7,7 @@ import {
   CalendarDays,
   MessageSquare,
   User,
+  Receipt,
   Settings,
   Globe,
   HelpCircle,
@@ -53,6 +54,10 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
               <Link href="/account/guest/messages" onClick={onClose} className={menuItemClass}>
                 <MessageSquare className="w-4 h-4" />
                 Messages
+              </Link>
+              <Link href="/account/guest/transactions" onClick={onClose} className={menuItemClass}>
+                <Receipt className="w-4 h-4" />
+                Transactions
               </Link>
               <Link href="/account/profile" onClick={onClose} className={menuItemClass}>
                 <User className="w-4 h-4" />

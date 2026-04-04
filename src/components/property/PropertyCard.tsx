@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback } from "react";
-import Link from "next/link";
+
 import { useRouter } from "next/navigation";
 import { Star, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatCurrency } from "@/lib/types";
@@ -16,7 +16,7 @@ export interface PropertyCardProps {
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onFavorite, isFavorite = false }) => {
   const router = useRouter();
   const propertyHref = `/properties/${property.id}`;
-  const hostSlug = property.hostName?.toLowerCase().replace(/\s+/g, "-");
+
   const images = property.images.slice(0, 5);
   const [currentIndex, setCurrentIndex] = useState(0);
   const touchStartX = useRef(0);
@@ -128,7 +128,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onFavorite
       {/* Text info */}
       <div className="space-y-0.5" onClick={() => router.push(propertyHref)}>
         <div className="flex items-center justify-between">
-          <h3 className="font-medium text-[15px] text-gray-900 truncate">
+          <h3 className="font-semibold text-[15px] text-gray-900 truncate">
             {property.propertyType} in {property.city}
           </h3>
           {property.rating && (
@@ -138,35 +138,13 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onFavorite
             </div>
           )}
         </div>
-        <p className="text-sm text-gray-500 truncate">{property.title}</p>
-        <p className="text-[15px] text-gray-900">
-          <span className="font-semibold">{formatCurrency(property.basePrice * 2)}</span>
+
+        <p className="text-[13px] text-gray-500">
+          <span className="font-semibold text-gray-900">{formatCurrency(property.basePrice * 2)}</span>
           <span className="font-normal"> for 2 nights</span>
         </p>
       </div>
 
-      {/* Host — links to host profile */}
-      {property.hostName && hostSlug && (
-        <Link
-          href={`/hosts/${hostSlug}`}
-          className="flex items-center gap-2 mt-1.5 group/host"
-        >
-          {property.hostAvatar?.startsWith("http") ? (
-            <img
-              src={property.hostAvatar}
-              alt={property.hostName}
-              className="w-7 h-7 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-7 h-7 rounded-full bg-[#0B3D2C] flex items-center justify-center text-white text-[10px] font-medium">
-              {property.hostAvatar}
-            </div>
-          )}
-          <span className="text-sm text-gray-500 group-hover/host:text-gray-900 group-hover/host:underline transition-colors">
-            Hosted by {property.hostName.split(" ")[0]}
-          </span>
-        </Link>
-      )}
     </div>
   );
 };

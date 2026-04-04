@@ -14,7 +14,7 @@ const ownerNav: NavItem[] = [
   { label: "Dashboard", href: "/owner" },
   { label: "Listings", href: "/owner/properties" },
   { label: "Hosts", href: "/owner/hosts" },
-  { label: "Payouts", href: "/owner/payouts" },
+  { label: "Wallet", href: "/owner/payouts" },
   { label: "Organization", href: "/owner/organization" },
   { label: "Settings", href: "/account/settings" },
 ];
@@ -25,6 +25,7 @@ const hostNav: NavItem[] = [
   { label: "Calendar", href: "/host/calendar" },
   { label: "Bookings", href: "/host/bookings" },
   { label: "Messages", href: "/host/messages" },
+  { label: "Wallet", href: "/host/wallet" },
   { label: "Settings", href: "/account/settings" },
 ];
 
