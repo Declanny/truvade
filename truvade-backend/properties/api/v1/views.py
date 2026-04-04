@@ -5,35 +5,35 @@ from rest_framework.response import Response
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 
 from core.utils.responses import success_response
-from properties.domain.selectors import get_properties_for_owner
+from properties.domain.selectors import get_shortlets_for_owner
 from properties.domain.services import (
-    check_property_editable,
-    delete_property_image,
-    publish_property,
+    check_shortlet_editable,
+    delete_shortlet_image,
+    publish_shortlet,
 )
-from properties.models import Property, PropertyImage
+from properties.models import Shortlet, ShortletImage
 
 from .permissions import IsOwner
-from .serializers import PropertyCreateSerializer, PropertySerializer
+from .serializers import ShortletCreateSerializer, ShortletSerializer
 
 
 @extend_schema(
-    summary="Property management API",
-    description="API for managing property listings",
-    tags=["Property"],
+    summary="Shortlet management API",
+    description="API for managing shortlet listings",
+    tags=["Shortlet"],
 )
-class PropertyViewSet(viewsets.ModelViewSet):
+class ShortletViewSet(viewsets.ModelViewSet):
     permission_classes = [IsOwner]
-    serializer_class = PropertySerializer
-    queryset = Property.objects.none()
+    serializer_class = ShortletSerializer
+    queryset = Shortlet.objects.none()
 
     def get_queryset(self):
-        return get_properties_for_owner(owner=self.request.user)
+        return get_shortlets_for_owner(owner=self.request.user)
 
     def get_serializer_class(self):
         if self.action == "create":
-            return PropertyCreateSerializer
-        return PropertySerializer
+            return ShortletCreateSerializer
+        return ShortletSerializer
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -41,47 +41,47 @@ class PropertyViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
-        return success_response("Properties retrieved successfully.", serializer.data)
+        return success_response("Shortlets retrieved successfully.", serializer.data)
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
-        return success_response("Property retrieved successfully.", serializer.data)
+        return success_response("Shortlet retrieved successfully.", serializer.data)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
-        output = PropertySerializer(serializer.instance)
+        output = ShortletSerializer(serializer.instance)
         return success_response(
-            "Property created successfully.",
+            "Shortlet created successfully.",
             output.data,
             status_code=status.HTTP_201_CREATED,
         )
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
-        check_property_editable(property_instance=instance)
+        check_shortlet_editable(shortlet=instance)
         serializer = self.get_serializer(instance, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return success_response("Property updated successfully.", serializer.data)
+        return success_response("Shortlet updated successfully.", serializer.data)
 
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
-        check_property_editable(property_instance=instance)
+        check_shortlet_editable(shortlet=instance)
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return success_response("Property updated successfully.", serializer.data)
+        return success_response("Shortlet updated successfully.", serializer.data)
 
     @action(detail=True, methods=["post"])
     def publish(self, request, pk=None):
-        prop = self.get_object()
-        publish_property(property_instance=prop)
+        shortlet = self.get_object()
+        publish_shortlet(shortlet=shortlet)
         return success_response(
-            "Property published successfully.",
-            PropertySerializer(prop).data,
+            "Shortlet published successfully.",
+            ShortletSerializer(shortlet).data,
         )
 
     @extend_schema(
@@ -96,9 +96,9 @@ class PropertyViewSet(viewsets.ModelViewSet):
         url_name="image-delete",
     )
     def images(self, request, pk=None, image_id=None):
-        prop = self.get_object()
+        shortlet = self.get_object()
         try:
-            delete_property_image(property_instance=prop, image_id=image_id)
-        except PropertyImage.DoesNotExist:
+            delete_shortlet_image(shortlet=shortlet, image_id=image_id)
+        except ShortletImage.DoesNotExist:
             raise NotFound("Image not found.")
         return Response(status=status.HTTP_204_NO_CONTENT)

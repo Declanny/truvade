@@ -2,8 +2,8 @@ from django.conf import settings
 from django.db import models
 
 
-class Property(models.Model):
-    class PropertyType(models.TextChoices):
+class Shortlet(models.Model):
+    class ShortletType(models.TextChoices):
         APARTMENT = "apartment", "Apartment"
         HOUSE = "house", "House"
         STUDIO = "studio", "Studio"
@@ -17,11 +17,11 @@ class Property(models.Model):
         ARCHIVED = "ARCHIVED", "Archived"
 
     owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="properties"
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="shortlets"
     )
     title = models.CharField(max_length=80)
     description = models.TextField(max_length=500, blank=True)
-    property_type = models.CharField(max_length=20, choices=PropertyType.choices)
+    shortlet_type = models.CharField(max_length=20, choices=ShortletType.choices)
     address = models.CharField(max_length=255, blank=True)
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100, blank=True)
@@ -50,18 +50,18 @@ class Property(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name_plural = "properties"
+        verbose_name_plural = "shortlets"
         ordering = ["-created_at"]
 
     def __str__(self):
         return self.title
 
 
-class PropertyImage(models.Model):
-    property = models.ForeignKey(
-        Property, on_delete=models.CASCADE, related_name="images"
+class ShortletImage(models.Model):
+    shortlet = models.ForeignKey(
+        Shortlet, on_delete=models.CASCADE, related_name="images"
     )
-    image = models.ImageField(upload_to="properties/")
+    image = models.ImageField(upload_to="shortlets/")
     is_cover = models.BooleanField(default=False)
     order = models.PositiveSmallIntegerField(default=0)
 
@@ -69,4 +69,4 @@ class PropertyImage(models.Model):
         ordering = ["order"]
 
     def __str__(self):
-        return f"Image {self.order} for {self.property.title}"
+        return f"Image {self.order} for {self.shortlet.title}"

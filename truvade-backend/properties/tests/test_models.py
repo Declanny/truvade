@@ -1,107 +1,107 @@
 import pytest
 
-from properties.models import Property, PropertyImage
+from properties.models import Shortlet, ShortletImage
 
 
 @pytest.mark.django_db
-class TestPropertyModel:
-    def test_create_property(self, property_data):
-        prop = Property.objects.create(**property_data)
-        assert prop.title == "Luxury 3-Bedroom Apartment"
-        assert prop.owner.email == "owner@example.com"
-        assert prop.base_price == 85000
+class TestShortletModel:
+    def test_create_shortlet(self, shortlet_data):
+        shortlet = Shortlet.objects.create(**shortlet_data)
+        assert shortlet.title == "Luxury 3-Bedroom Apartment"
+        assert shortlet.owner.email == "owner@example.com"
+        assert shortlet.base_price == 85000
 
-    def test_default_status_is_draft(self, property_data):
-        prop = Property.objects.create(**property_data)
-        assert prop.status == "DRAFT"
+    def test_default_status_is_draft(self, shortlet_data):
+        shortlet = Shortlet.objects.create(**shortlet_data)
+        assert shortlet.status == "DRAFT"
 
-    def test_default_currency_is_ngn(self, property_data):
-        prop = Property.objects.create(**property_data)
-        assert prop.currency == "NGN"
+    def test_default_currency_is_ngn(self, shortlet_data):
+        shortlet = Shortlet.objects.create(**shortlet_data)
+        assert shortlet.currency == "NGN"
 
-    def test_default_cleaning_fee_is_zero(self, property_data):
-        prop = Property.objects.create(**property_data)
-        assert prop.cleaning_fee == 0
+    def test_default_cleaning_fee_is_zero(self, shortlet_data):
+        shortlet = Shortlet.objects.create(**shortlet_data)
+        assert shortlet.cleaning_fee == 0
 
-    def test_default_min_nights_is_one(self, property_data):
-        prop = Property.objects.create(**property_data)
-        assert prop.min_nights == 1
+    def test_default_min_nights_is_one(self, shortlet_data):
+        shortlet = Shortlet.objects.create(**shortlet_data)
+        assert shortlet.min_nights == 1
 
-    def test_boolean_defaults(self, property_data):
-        prop = Property.objects.create(**property_data)
-        assert prop.featured is False
-        assert prop.verified is False
-        assert prop.guest_favorite is False
+    def test_boolean_defaults(self, shortlet_data):
+        shortlet = Shortlet.objects.create(**shortlet_data)
+        assert shortlet.featured is False
+        assert shortlet.verified is False
+        assert shortlet.guest_favorite is False
 
-    def test_str_returns_title(self, property_data):
-        prop = Property.objects.create(**property_data)
-        assert str(prop) == "Luxury 3-Bedroom Apartment"
+    def test_str_returns_title(self, shortlet_data):
+        shortlet = Shortlet.objects.create(**shortlet_data)
+        assert str(shortlet) == "Luxury 3-Bedroom Apartment"
 
-    def test_timestamps_set_on_create(self, property_data):
-        prop = Property.objects.create(**property_data)
-        assert prop.created_at is not None
-        assert prop.updated_at is not None
+    def test_timestamps_set_on_create(self, shortlet_data):
+        shortlet = Shortlet.objects.create(**shortlet_data)
+        assert shortlet.created_at is not None
+        assert shortlet.updated_at is not None
 
-    def test_amenities_stored_as_list(self, property_data):
-        prop = Property.objects.create(**property_data)
-        prop.refresh_from_db()
-        assert prop.amenities == ["WiFi", "Air Conditioning", "Pool"]
+    def test_amenities_stored_as_list(self, shortlet_data):
+        shortlet = Shortlet.objects.create(**shortlet_data)
+        shortlet.refresh_from_db()
+        assert shortlet.amenities == ["WiFi", "Air Conditioning", "Pool"]
 
-    def test_property_type_choices(self, property_data):
-        for ptype in ["apartment", "house", "studio", "villa"]:
-            property_data["property_type"] = ptype
-            prop = Property.objects.create(**property_data)
-            assert prop.property_type == ptype
+    def test_shortlet_type_choices(self, shortlet_data):
+        for stype in ["apartment", "house", "studio", "villa"]:
+            shortlet_data["shortlet_type"] = stype
+            shortlet = Shortlet.objects.create(**shortlet_data)
+            assert shortlet.shortlet_type == stype
 
-    def test_optional_lat_lng(self, property_data):
-        prop = Property.objects.create(**property_data)
-        assert prop.latitude is None
-        assert prop.longitude is None
+    def test_optional_lat_lng(self, shortlet_data):
+        shortlet = Shortlet.objects.create(**shortlet_data)
+        assert shortlet.latitude is None
+        assert shortlet.longitude is None
 
-    def test_lat_lng_set(self, property_data):
-        property_data["latitude"] = 6.4281
-        property_data["longitude"] = 3.4219
-        prop = Property.objects.create(**property_data)
-        assert float(prop.latitude) == 6.4281
-        assert float(prop.longitude) == 3.4219
+    def test_lat_lng_set(self, shortlet_data):
+        shortlet_data["latitude"] = 6.4281
+        shortlet_data["longitude"] = 3.4219
+        shortlet = Shortlet.objects.create(**shortlet_data)
+        assert float(shortlet.latitude) == 6.4281
+        assert float(shortlet.longitude) == 3.4219
 
 
 @pytest.mark.django_db
-class TestPropertyImageModel:
-    def test_create_image(self, property_data):
-        prop = Property.objects.create(**property_data)
-        image = PropertyImage.objects.create(
-            property=prop, image="properties/test.jpg", order=0
+class TestShortletImageModel:
+    def test_create_image(self, shortlet_data):
+        shortlet = Shortlet.objects.create(**shortlet_data)
+        image = ShortletImage.objects.create(
+            shortlet=shortlet, image="shortlets/test.jpg", order=0
         )
-        assert image.property == prop
+        assert image.shortlet == shortlet
         assert image.is_cover is False
         assert image.order == 0
 
-    def test_cover_image(self, property_data):
-        prop = Property.objects.create(**property_data)
-        image = PropertyImage.objects.create(
-            property=prop, image="properties/test.jpg", order=0, is_cover=True
+    def test_cover_image(self, shortlet_data):
+        shortlet = Shortlet.objects.create(**shortlet_data)
+        image = ShortletImage.objects.create(
+            shortlet=shortlet, image="shortlets/test.jpg", order=0, is_cover=True
         )
         assert image.is_cover is True
 
-    def test_images_ordered(self, property_data):
-        prop = Property.objects.create(**property_data)
-        PropertyImage.objects.create(property=prop, image="properties/b.jpg", order=1)
-        PropertyImage.objects.create(property=prop, image="properties/a.jpg", order=0)
-        images = list(prop.images.all())
+    def test_images_ordered(self, shortlet_data):
+        shortlet = Shortlet.objects.create(**shortlet_data)
+        ShortletImage.objects.create(shortlet=shortlet, image="shortlets/b.jpg", order=1)
+        ShortletImage.objects.create(shortlet=shortlet, image="shortlets/a.jpg", order=0)
+        images = list(shortlet.images.all())
         assert images[0].order == 0
         assert images[1].order == 1
 
-    def test_str_returns_description(self, property_data):
-        prop = Property.objects.create(**property_data)
-        image = PropertyImage.objects.create(
-            property=prop, image="properties/test.jpg", order=0
+    def test_str_returns_description(self, shortlet_data):
+        shortlet = Shortlet.objects.create(**shortlet_data)
+        image = ShortletImage.objects.create(
+            shortlet=shortlet, image="shortlets/test.jpg", order=0
         )
-        assert str(image) == f"Image 0 for {prop.title}"
+        assert str(image) == f"Image 0 for {shortlet.title}"
 
-    def test_cascade_delete(self, property_data):
-        prop = Property.objects.create(**property_data)
-        PropertyImage.objects.create(property=prop, image="properties/test.jpg", order=0)
-        assert PropertyImage.objects.count() == 1
-        prop.delete()
-        assert PropertyImage.objects.count() == 0
+    def test_cascade_delete(self, shortlet_data):
+        shortlet = Shortlet.objects.create(**shortlet_data)
+        ShortletImage.objects.create(shortlet=shortlet, image="shortlets/test.jpg", order=0)
+        assert ShortletImage.objects.count() == 1
+        shortlet.delete()
+        assert ShortletImage.objects.count() == 0

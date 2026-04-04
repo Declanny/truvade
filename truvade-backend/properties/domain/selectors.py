@@ -1,9 +1,9 @@
-from properties.models import Property
+from properties.models import Shortlet
 
 
-def get_properties_for_owner(*, owner):
+def get_shortlets_for_owner(*, owner):
     return (
-        Property.objects.filter(owner=owner)
+        Shortlet.objects.filter(owner=owner)
         .select_related("owner")
         .prefetch_related("images")
     )

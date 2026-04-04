@@ -1,45 +1,45 @@
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
-from properties.models import Property, PropertyImage
+from properties.models import Shortlet, ShortletImage
 
 
 @transaction.atomic
-def create_property(*, owner, **validated_data):
-    validated_data["status"] = Property.Status.DRAFT
-    return Property.objects.create(owner=owner, **validated_data)
+def create_shortlet(*, owner, **validated_data):
+    validated_data["status"] = Shortlet.Status.DRAFT
+    return Shortlet.objects.create(owner=owner, **validated_data)
 
 
-def check_property_editable(*, property_instance):
-    if property_instance.status not in ("DRAFT", "ACTIVE"):
-        raise ValidationError("Only DRAFT or ACTIVE properties can be edited.")
+def check_shortlet_editable(*, shortlet):
+    if shortlet.status not in ("DRAFT", "ACTIVE"):
+        raise ValidationError("Only DRAFT or ACTIVE shortlets can be edited.")
 
 
 @transaction.atomic
-def publish_property(*, property_instance):
-    if property_instance.status != "DRAFT":
-        raise ValidationError("Only DRAFT properties can be published.")
+def publish_shortlet(*, shortlet):
+    if shortlet.status != "DRAFT":
+        raise ValidationError("Only DRAFT shortlets can be published.")
 
     errors = []
-    if not property_instance.description:
+    if not shortlet.description:
         errors.append("Description is required.")
-    if not property_instance.amenities:
+    if not shortlet.amenities:
         errors.append("At least 1 amenity is required.")
-    if property_instance.images.count() < 5:
+    if shortlet.images.count() < 5:
         errors.append("At least 5 images are required.")
 
     if errors:
         raise ValidationError(errors)
 
-    property_instance.status = Property.Status.PENDING
-    property_instance.save()
-    return property_instance
+    shortlet.status = Shortlet.Status.PENDING
+    shortlet.save()
+    return shortlet
 
 
 @transaction.atomic
-def delete_property_image(*, property_instance, image_id):
+def delete_shortlet_image(*, shortlet, image_id):
     try:
-        image = property_instance.images.get(id=image_id)
-    except PropertyImage.DoesNotExist:
+        image = shortlet.images.get(id=image_id)
+    except ShortletImage.DoesNotExist:
         raise
     image.delete()

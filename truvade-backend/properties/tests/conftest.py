@@ -2,7 +2,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
-from properties.models import Property, PropertyImage
+from properties.models import Shortlet, ShortletImage
 
 User = get_user_model()
 
@@ -34,12 +34,12 @@ def guest(db):
 
 
 @pytest.fixture
-def property_data(owner):
+def shortlet_data(owner):
     return {
         "owner": owner,
         "title": "Luxury 3-Bedroom Apartment",
         "description": "A beautiful apartment in Victoria Island",
-        "property_type": "apartment",
+        "shortlet_type": "apartment",
         "address": "12 Ahmadu Bello Way",
         "city": "Victoria Island",
         "state": "Lagos",
@@ -53,11 +53,11 @@ def property_data(owner):
 
 
 @pytest.fixture
-def draft_property(owner):
-    return Property.objects.create(
+def draft_shortlet(owner):
+    return Shortlet.objects.create(
         owner=owner,
         title="Draft Apartment",
-        property_type="apartment",
+        shortlet_type="apartment",
         city="Victoria Island",
         state="Lagos",
         bedrooms=3,
@@ -69,13 +69,13 @@ def draft_property(owner):
 
 
 @pytest.fixture
-def publishable_property(owner):
-    """A property with all required fields to be published (including 5+ images)."""
-    prop = Property.objects.create(
+def publishable_shortlet(owner):
+    """A shortlet with all required fields to be published (including 5+ images)."""
+    shortlet = Shortlet.objects.create(
         owner=owner,
         title="Ready Apartment",
         description="A beautiful place to stay",
-        property_type="apartment",
+        shortlet_type="apartment",
         city="Lekki",
         state="Lagos",
         bedrooms=2,
@@ -85,7 +85,7 @@ def publishable_property(owner):
         amenities=["WiFi"],
     )
     for i in range(5):
-        PropertyImage.objects.create(
-            property=prop, image=f"properties/img{i}.jpg", order=i
+        ShortletImage.objects.create(
+            shortlet=shortlet, image=f"shortlets/img{i}.jpg", order=i
         )
-    return prop
+    return shortlet

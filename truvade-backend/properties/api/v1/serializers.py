@@ -1,22 +1,22 @@
 from rest_framework import serializers
 
-from properties.models import Property, PropertyImage
+from properties.models import Shortlet, ShortletImage
 
 
-class PropertyImageSerializer(serializers.ModelSerializer):
+class ShortletImageSerializer(serializers.ModelSerializer):
     class Meta:
-        model = PropertyImage
+        model = ShortletImage
         fields = ["id", "image", "is_cover", "order"]
         read_only_fields = ["id"]
 
 
-class PropertySerializer(serializers.ModelSerializer):
-    images = PropertyImageSerializer(many=True, read_only=True)
+class ShortletSerializer(serializers.ModelSerializer):
+    images = ShortletImageSerializer(many=True, read_only=True)
 
     class Meta:
-        model = Property
+        model = Shortlet
         fields = [
-            "id", "owner", "title", "description", "property_type",
+            "id", "owner", "title", "description", "shortlet_type",
             "address", "city", "state", "country", "latitude", "longitude",
             "bedrooms", "bathrooms", "max_guests", "min_nights",
             "base_price", "cleaning_fee", "currency", "amenities",
@@ -26,16 +26,16 @@ class PropertySerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "owner", "created_at", "updated_at"]
 
 
-class PropertyCreateSerializer(serializers.ModelSerializer):
+class ShortletCreateSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Property
+        model = Shortlet
         fields = [
-            "title", "description", "property_type",
+            "title", "description", "shortlet_type",
             "address", "city", "state", "country", "latitude", "longitude",
             "bedrooms", "bathrooms", "max_guests", "min_nights",
             "base_price", "cleaning_fee", "currency", "amenities",
         ]
 
     def create(self, validated_data):
-        validated_data["status"] = Property.Status.DRAFT
+        validated_data["status"] = Shortlet.Status.DRAFT
         return super().create(validated_data)
