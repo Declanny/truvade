@@ -29,12 +29,7 @@ class ShortletSerializer(serializers.ModelSerializer):
 class ShortletCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Shortlet
-        fields = [
-            "title", "description", "shortlet_type",
-            "address", "city", "state", "country", "latitude", "longitude",
-            "bedrooms", "bathrooms", "max_guests", "min_nights",
-            "base_price", "cleaning_fee", "currency", "amenities",
-        ]
+        fields = ["shortlet_type"]
 
     def create(self, validated_data):
         validated_data["status"] = Shortlet.Status.DRAFT

@@ -5,7 +5,14 @@ from properties.models import Shortlet, ShortletImage
 
 @pytest.mark.django_db
 class TestShortletModel:
-    def test_create_shortlet(self, shortlet_data):
+    def test_create_minimal_shortlet(self, owner):
+        shortlet = Shortlet.objects.create(owner=owner, shortlet_type="apartment")
+        assert shortlet.pk is not None
+        assert shortlet.status == "DRAFT"
+        assert shortlet.title == ""
+        assert shortlet.base_price is None
+
+    def test_create_full_shortlet(self, shortlet_data):
         shortlet = Shortlet.objects.create(**shortlet_data)
         assert shortlet.title == "Luxury 3-Bedroom Apartment"
         assert shortlet.owner.email == "owner@example.com"

@@ -19,11 +19,11 @@ class Shortlet(models.Model):
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="shortlets"
     )
-    title = models.CharField(max_length=80)
+    title = models.CharField(max_length=80, blank=True, default="")
     description = models.TextField(max_length=500, blank=True)
     shortlet_type = models.CharField(max_length=20, choices=ShortletType.choices)
     address = models.CharField(max_length=255, blank=True)
-    city = models.CharField(max_length=100)
+    city = models.CharField(max_length=100, blank=True, default="")
     state = models.CharField(max_length=100, blank=True)
     country = models.CharField(max_length=100, default="Nigeria")
     latitude = models.DecimalField(
@@ -36,7 +36,7 @@ class Shortlet(models.Model):
     bathrooms = models.PositiveSmallIntegerField(default=1)
     max_guests = models.PositiveSmallIntegerField(default=2)
     min_nights = models.PositiveSmallIntegerField(default=1)
-    base_price = models.DecimalField(max_digits=12, decimal_places=2)
+    base_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     cleaning_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     currency = models.CharField(max_length=5, default="NGN")
     amenities = models.JSONField(default=list, blank=True)

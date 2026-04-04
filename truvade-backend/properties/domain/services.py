@@ -21,6 +21,12 @@ def publish_shortlet(*, shortlet):
         raise ValidationError("Only DRAFT shortlets can be published.")
 
     errors = []
+    if not shortlet.title:
+        errors.append("Title is required.")
+    if not shortlet.city:
+        errors.append("City is required.")
+    if shortlet.base_price is None:
+        errors.append("Base price is required.")
     if not shortlet.description:
         errors.append("Description is required.")
     if not shortlet.amenities:

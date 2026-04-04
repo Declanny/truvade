@@ -34,63 +34,31 @@ class TestShortletSerializer:
 
 @pytest.mark.django_db
 class TestShortletCreateSerializer:
-    def test_valid_data(self):
-        data = {
-            "title": "New Apartment",
-            "description": "Nice place",
-            "shortlet_type": "apartment",
-            "city": "Lekki",
-            "state": "Lagos",
-            "bedrooms": 2,
-            "bathrooms": 1,
-            "max_guests": 4,
-            "base_price": 50000,
-            "amenities": ["WiFi"],
-        }
+    def test_valid_with_only_shortlet_type(self):
+        data = {"shortlet_type": "apartment"}
         serializer = ShortletCreateSerializer(data=data)
         assert serializer.is_valid(), serializer.errors
 
-    def test_title_required(self):
-        serializer = ShortletCreateSerializer(data={"city": "Lagos", "base_price": 1000})
+    def test_shortlet_type_required(self):
+        serializer = ShortletCreateSerializer(data={})
         assert not serializer.is_valid()
-        assert "title" in serializer.errors
-
-    def test_base_price_required(self):
-        serializer = ShortletCreateSerializer(data={"title": "Test", "city": "Lagos"})
-        assert not serializer.is_valid()
-        assert "base_price" in serializer.errors
+        assert "shortlet_type" in serializer.errors
 
     def test_invalid_shortlet_type(self):
-        data = {
-            "title": "Test",
-            "shortlet_type": "castle",
-            "city": "Lagos",
-            "base_price": 1000,
-        }
+        data = {"shortlet_type": "castle"}
         serializer = ShortletCreateSerializer(data=data)
         assert not serializer.is_valid()
         assert "shortlet_type" in serializer.errors
 
     def test_status_defaults_to_draft(self, owner):
-        data = {
-            "title": "New Apartment",
-            "shortlet_type": "apartment",
-            "city": "Lekki",
-            "base_price": 50000,
-        }
+        data = {"shortlet_type": "apartment"}
         serializer = ShortletCreateSerializer(data=data)
         assert serializer.is_valid(), serializer.errors
         shortlet = serializer.save(owner=owner)
         assert shortlet.status == "DRAFT"
 
     def test_cannot_set_status_on_create(self, owner):
-        data = {
-            "title": "New Apartment",
-            "shortlet_type": "apartment",
-            "city": "Lekki",
-            "base_price": 50000,
-            "status": "ACTIVE",
-        }
+        data = {"shortlet_type": "apartment", "status": "ACTIVE"}
         serializer = ShortletCreateSerializer(data=data)
         assert serializer.is_valid(), serializer.errors
         shortlet = serializer.save(owner=owner)

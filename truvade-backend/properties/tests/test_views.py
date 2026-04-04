@@ -23,7 +23,7 @@ class TestShortletPermissions:
 
     def test_guest_cannot_create(self, api_client, guest):
         api_client.force_authenticate(user=guest)
-        resp = api_client.post("/api/v1/shortlets/", {"title": "Test"})
+        resp = api_client.post("/api/v1/shortlets/", {"shortlet_type": "apartment"})
         assert resp.status_code == status.HTTP_403_FORBIDDEN
 
     def test_owner_can_list(self, api_client, owner):
@@ -52,18 +52,12 @@ class TestShortletPermissions:
 
 @pytest.mark.django_db
 class TestShortletCRUD:
-    def test_create_shortlet(self, api_client, owner):
+    def test_create_shortlet_with_only_type(self, api_client, owner):
         api_client.force_authenticate(user=owner)
-        data = {
-            "title": "New Apartment",
-            "shortlet_type": "apartment",
-            "city": "Lekki",
-            "base_price": 50000,
-            "amenities": ["WiFi"],
-        }
+        data = {"shortlet_type": "apartment"}
         resp = api_client.post("/api/v1/shortlets/", data, format="json")
         assert resp.status_code == status.HTTP_201_CREATED
-        assert resp.data["data"]["title"] == "New Apartment"
+        assert resp.data["data"]["shortlet_type"] == "apartment"
         assert resp.data["data"]["status"] == "DRAFT"
         assert resp.data["data"]["owner"] == owner.id
 
@@ -100,6 +94,68 @@ class TestShortletCRUD:
             format="json",
         )
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+
+# --- Step-by-step flow ---
+
+
+@pytest.mark.django_db
+class TestShortletStepByStepFlow:
+    def test_full_listing_flow(self, api_client, owner):
+        api_client.force_authenticate(user=owner)
+
+        # Step 1: Create with only shortlet type
+        resp = api_client.post(
+            "/api/v1/shortlets/",
+            {"shortlet_type": "villa"},
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_201_CREATED
+        shortlet_id = resp.data["data"]["id"]
+        assert resp.data["data"]["status"] == "DRAFT"
+
+        # Step 2: Fill in details via PATCH
+        api_client.patch(
+            f"/api/v1/shortlets/{shortlet_id}/",
+            {
+                "title": "Beautiful Villa",
+                "description": "A stunning villa by the ocean",
+                "city": "Lekki",
+                "base_price": 150000,
+                "amenities": ["WiFi", "Pool"],
+            },
+            format="json",
+        )
+
+        # Step 3: Add images (simulate via direct creation)
+        for i in range(5):
+            ShortletImage.objects.create(
+                shortlet_id=shortlet_id, image=f"shortlets/img{i}.jpg", order=i
+            )
+
+        # Step 4: Publish
+        resp = api_client.post(f"/api/v1/shortlets/{shortlet_id}/publish/")
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.data["data"]["status"] == "PENDING"
+
+    def test_cannot_publish_incomplete_draft(self, api_client, owner):
+        api_client.force_authenticate(user=owner)
+
+        # Create minimal draft
+        resp = api_client.post(
+            "/api/v1/shortlets/",
+            {"shortlet_type": "apartment"},
+            format="json",
+        )
+        shortlet_id = resp.data["data"]["id"]
+
+        # Try to publish without filling details
+        resp = api_client.post(f"/api/v1/shortlets/{shortlet_id}/publish/")
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+        error_str = str(resp.data["error"]).lower()
+        assert "title" in error_str
+        assert "city" in error_str
+        assert "base price" in error_str
 
 
 # --- Publish ---

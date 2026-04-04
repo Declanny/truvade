@@ -12,25 +12,20 @@ from properties.models import Shortlet, ShortletImage
 
 @pytest.mark.django_db
 class TestCreateShortlet:
-    def test_creates_shortlet_with_draft_status(self, owner):
+    def test_creates_shortlet_with_only_type(self, owner):
         shortlet = create_shortlet(
             owner=owner,
-            title="New Place",
             shortlet_type="apartment",
-            city="Lagos",
-            base_price=50000,
         )
         assert shortlet.pk is not None
         assert shortlet.status == "DRAFT"
         assert shortlet.owner == owner
+        assert shortlet.shortlet_type == "apartment"
 
     def test_forces_draft_even_if_status_passed(self, owner):
         shortlet = create_shortlet(
             owner=owner,
-            title="New Place",
             shortlet_type="apartment",
-            city="Lagos",
-            base_price=50000,
             status="ACTIVE",
         )
         assert shortlet.status == "DRAFT"
@@ -68,6 +63,24 @@ class TestPublishShortlet:
         with pytest.raises(ValidationError, match="Only DRAFT"):
             publish_shortlet(shortlet=publishable_shortlet)
 
+    def test_raises_without_title(self, publishable_shortlet):
+        publishable_shortlet.title = ""
+        publishable_shortlet.save()
+        with pytest.raises(ValidationError, match="Title"):
+            publish_shortlet(shortlet=publishable_shortlet)
+
+    def test_raises_without_city(self, publishable_shortlet):
+        publishable_shortlet.city = ""
+        publishable_shortlet.save()
+        with pytest.raises(ValidationError, match="City"):
+            publish_shortlet(shortlet=publishable_shortlet)
+
+    def test_raises_without_base_price(self, publishable_shortlet):
+        publishable_shortlet.base_price = None
+        publishable_shortlet.save()
+        with pytest.raises(ValidationError, match="Base price"):
+            publish_shortlet(shortlet=publishable_shortlet)
+
     def test_raises_without_description(self, publishable_shortlet):
         publishable_shortlet.description = ""
         publishable_shortlet.save()
@@ -86,14 +99,14 @@ class TestPublishShortlet:
         with pytest.raises(ValidationError, match="images"):
             publish_shortlet(shortlet=draft_shortlet)
 
-    def test_collects_multiple_errors(self, draft_shortlet):
-        draft_shortlet.description = ""
-        draft_shortlet.amenities = []
-        draft_shortlet.save()
+    def test_collects_multiple_errors(self, owner):
+        shortlet = Shortlet.objects.create(
+            owner=owner, shortlet_type="apartment"
+        )
         with pytest.raises(ValidationError) as exc_info:
-            publish_shortlet(shortlet=draft_shortlet)
+            publish_shortlet(shortlet=shortlet)
         messages = exc_info.value.messages
-        assert len(messages) == 3
+        assert len(messages) == 6
 
 
 @pytest.mark.django_db
