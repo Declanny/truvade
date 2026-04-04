@@ -37,7 +37,7 @@ class TestPropertyPermissions:
         api_client.force_authenticate(user=other_owner)
         resp = api_client.get("/api/v1/properties/")
         assert resp.status_code == status.HTTP_200_OK
-        assert len(resp.data) == 0
+        assert len(resp.data["data"]) == 0
 
     def test_owner_cannot_access_others_property_detail(
         self, api_client, other_owner, draft_property
@@ -63,22 +63,22 @@ class TestPropertyCRUD:
         }
         resp = api_client.post("/api/v1/properties/", data, format="json")
         assert resp.status_code == status.HTTP_201_CREATED
-        assert resp.data["title"] == "New Apartment"
-        assert resp.data["status"] == "DRAFT"
-        assert resp.data["owner"] == owner.id
+        assert resp.data["data"]["title"] == "New Apartment"
+        assert resp.data["data"]["status"] == "DRAFT"
+        assert resp.data["data"]["owner"] == owner.id
 
     def test_list_own_properties(self, api_client, owner, draft_property):
         api_client.force_authenticate(user=owner)
         resp = api_client.get("/api/v1/properties/")
         assert resp.status_code == status.HTTP_200_OK
-        assert len(resp.data) == 1
-        assert resp.data[0]["title"] == "Draft Apartment"
+        assert len(resp.data["data"]) == 1
+        assert resp.data["data"][0]["title"] == "Draft Apartment"
 
     def test_retrieve_property(self, api_client, owner, draft_property):
         api_client.force_authenticate(user=owner)
         resp = api_client.get(f"/api/v1/properties/{draft_property.id}/")
         assert resp.status_code == status.HTTP_200_OK
-        assert resp.data["title"] == "Draft Apartment"
+        assert resp.data["data"]["title"] == "Draft Apartment"
 
     def test_update_draft_property(self, api_client, owner, draft_property):
         api_client.force_authenticate(user=owner)
@@ -88,7 +88,7 @@ class TestPropertyCRUD:
             format="json",
         )
         assert resp.status_code == status.HTTP_200_OK
-        assert resp.data["title"] == "Updated Title"
+        assert resp.data["data"]["title"] == "Updated Title"
 
     def test_cannot_update_pending_property(self, api_client, owner, draft_property):
         draft_property.status = "PENDING"
@@ -120,7 +120,7 @@ class TestPropertyPublish:
         api_client.force_authenticate(user=owner)
         resp = api_client.post(f"/api/v1/properties/{draft_property.id}/publish/")
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
-        assert "images" in str(resp.data).lower()
+        assert "images" in str(resp.data["error"]).lower()
 
     def test_publish_without_description(self, api_client, owner, publishable_property):
         publishable_property.description = ""

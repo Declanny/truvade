@@ -140,6 +140,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'EXCEPTION_HANDLER': 'core.utils.exception_handler.custom_exception_handler',
 }
 
 SPECTACULAR_SETTINGS = {

@@ -1,8 +1,10 @@
-from django.core.exceptions import ValidationError
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema
 
+from core.utils.responses import success_response
 from properties.domain.selectors import get_properties_for_owner
 from properties.domain.services import (
     check_property_editable,
@@ -15,6 +17,11 @@ from .permissions import IsOwner
 from .serializers import PropertyCreateSerializer, PropertySerializer
 
 
+@extend_schema(
+    summary="Property management API",
+    description="API for managing property listings",
+    tags=["Property"],
+)
 class PropertyViewSet(viewsets.ModelViewSet):
     permission_classes = [IsOwner]
     serializer_class = PropertySerializer
@@ -30,46 +37,51 @@ class PropertyViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return success_response("Properties retrieved successfully.", serializer.data)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return success_response("Property retrieved successfully.", serializer.data)
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         output = PropertySerializer(serializer.instance)
-        return Response(output.data, status=status.HTTP_201_CREATED)
+        return success_response(
+            "Property created successfully.",
+            output.data,
+            status_code=status.HTTP_201_CREATED,
+        )
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
-        try:
-            check_property_editable(property_instance=instance)
-        except ValidationError as e:
-            return Response(
-                {"detail": e.message},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        return super().update(request, *args, **kwargs)
+        check_property_editable(property_instance=instance)
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return success_response("Property updated successfully.", serializer.data)
 
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
-        try:
-            check_property_editable(property_instance=instance)
-        except ValidationError as e:
-            return Response(
-                {"detail": e.message},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        return super().partial_update(request, *args, **kwargs)
+        check_property_editable(property_instance=instance)
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return success_response("Property updated successfully.", serializer.data)
 
     @action(detail=True, methods=["post"])
     def publish(self, request, pk=None):
         prop = self.get_object()
-        try:
-            publish_property(property_instance=prop)
-        except ValidationError as e:
-            return Response(
-                {"detail": e.messages},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        return Response(PropertySerializer(prop).data)
+        publish_property(property_instance=prop)
+        return success_response(
+            "Property published successfully.",
+            PropertySerializer(prop).data,
+        )
 
     @action(
         detail=True,
@@ -82,5 +94,5 @@ class PropertyViewSet(viewsets.ModelViewSet):
         try:
             delete_property_image(property_instance=prop, image_id=image_id)
         except PropertyImage.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            raise NotFound("Image not found.")
         return Response(status=status.HTTP_204_NO_CONTENT)
