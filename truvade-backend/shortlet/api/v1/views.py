@@ -1,12 +1,12 @@
 from django.contrib.auth import get_user_model
 
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from drf_spectacular.utils import OpenApiParameter, extend_schema
 
 from accounts.api.v1.permissions import IsHostRole
 from core.utils.responses import success_response
@@ -35,16 +35,13 @@ from .serializers import (
     ShortletImageSerializer,
     ShortletSerializer,
     UpdateAssignmentPermissionsSerializer,
+    UploadImagesSerializer,
 )
 
 User = get_user_model()
 
 
-@extend_schema(
-    summary="Shortlet management API",
-    description="API for managing shortlet listings",
-    tags=["Shortlet"],
-)
+@extend_schema(tags=["Shortlets"])
 class ShortletViewSet(viewsets.ModelViewSet):
     permission_classes = [IsOwner]
     serializer_class = ShortletSerializer
@@ -61,16 +58,29 @@ class ShortletViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+    @extend_schema(
+        summary="List owner's shortlets",
+        responses=ShortletSerializer(many=True),
+    )
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
         return success_response("Shortlets retrieved successfully.", serializer.data)
 
+    @extend_schema(
+        summary="Get shortlet detail",
+        responses=ShortletSerializer,
+    )
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return success_response("Shortlet retrieved successfully.", serializer.data)
 
+    @extend_schema(
+        summary="Create a new shortlet (draft)",
+        request=ShortletCreateSerializer,
+        responses=ShortletSerializer,
+    )
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -82,6 +92,11 @@ class ShortletViewSet(viewsets.ModelViewSet):
             status_code=status.HTTP_201_CREATED,
         )
 
+    @extend_schema(
+        summary="Update shortlet (full)",
+        request=ShortletSerializer,
+        responses=ShortletSerializer,
+    )
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
         check_shortlet_editable(shortlet=instance)
@@ -90,6 +105,11 @@ class ShortletViewSet(viewsets.ModelViewSet):
         serializer.save()
         return success_response("Shortlet updated successfully.", serializer.data)
 
+    @extend_schema(
+        summary="Update shortlet (partial)",
+        request=ShortletSerializer,
+        responses=ShortletSerializer,
+    )
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
         check_shortlet_editable(shortlet=instance)
@@ -98,6 +118,11 @@ class ShortletViewSet(viewsets.ModelViewSet):
         serializer.save()
         return success_response("Shortlet updated successfully.", serializer.data)
 
+    @extend_schema(
+        summary="Publish a shortlet",
+        request=None,
+        responses=ShortletSerializer,
+    )
     @action(detail=True, methods=["post"])
     def publish(self, request, pk=None):
         shortlet = self.get_object()
@@ -107,6 +132,11 @@ class ShortletViewSet(viewsets.ModelViewSet):
             ShortletSerializer(shortlet).data,
         )
 
+    @extend_schema(
+        summary="Upload images to a shortlet",
+        request=UploadImagesSerializer,
+        responses=ShortletImageSerializer(many=True),
+    )
     @action(detail=True, methods=["post"], url_path="upload-images")
     def upload_images(self, request, pk=None):
         shortlet = self.get_object()
@@ -124,6 +154,9 @@ class ShortletViewSet(viewsets.ModelViewSet):
         )
 
     @extend_schema(
+        summary="Delete a shortlet image",
+        request=None,
+        responses=None,
         parameters=[
             OpenApiParameter("image_id", int, OpenApiParameter.PATH),
         ],
@@ -142,6 +175,11 @@ class ShortletViewSet(viewsets.ModelViewSet):
             raise NotFound("Image not found.")
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @extend_schema(
+        summary="Assign a host to a shortlet",
+        request=AssignHostSerializer,
+        responses=ShortletHostAssignmentSerializer,
+    )
     @action(detail=True, methods=["post"], url_path="assign-host")
     def assign_host(self, request, pk=None):
         shortlet = self.get_object()
@@ -164,6 +202,11 @@ class ShortletViewSet(viewsets.ModelViewSet):
             status_code=status.HTTP_201_CREATED,
         )
 
+    @extend_schema(
+        summary="List available hosts for assignment",
+        request=None,
+        responses=AvailableHostSerializer(many=True),
+    )
     @action(detail=True, methods=["get"], url_path="available-hosts")
     def available_hosts(self, request, pk=None):
         shortlet = self.get_object()
@@ -173,6 +216,14 @@ class ShortletViewSet(viewsets.ModelViewSet):
             AvailableHostSerializer(hosts, many=True).data,
         )
 
+    @extend_schema(
+        summary="Unassign a host from a shortlet",
+        request=None,
+        responses=None,
+        parameters=[
+            OpenApiParameter("assignment_id", int, OpenApiParameter.PATH),
+        ],
+    )
     @action(
         detail=True,
         methods=["delete"],
@@ -188,6 +239,14 @@ class ShortletViewSet(viewsets.ModelViewSet):
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @extend_schema(
+        summary="Update host assignment permissions",
+        request=UpdateAssignmentPermissionsSerializer,
+        responses=ShortletHostAssignmentSerializer,
+        parameters=[
+            OpenApiParameter("assignment_id", int, OpenApiParameter.PATH),
+        ],
+    )
     @action(
         detail=True,
         methods=["patch"],
@@ -210,7 +269,11 @@ class ShortletViewSet(viewsets.ModelViewSet):
         )
 
 
-@extend_schema(tags=["Shortlets"], responses=ShortletSerializer(many=True))
+@extend_schema(
+    tags=["Shortlets"],
+    summary="List shortlets assigned to the authenticated host",
+    responses=ShortletSerializer(many=True),
+)
 class HostShortletListView(APIView):
     """Lists shortlets assigned to the authenticated host."""
 

@@ -2,9 +2,6 @@ from django.urls import path
 
 from .views import (
     AcceptInvitationView,
-    AdminPendingVerificationsView,
-    AdminReviewVerificationView,
-    AdminVerificationDetailView,
     CreateInvitationView,
     DeclineInvitationView,
     HostListView,
@@ -76,20 +73,5 @@ urlpatterns = [
         "verifications/me/",
         MyVerificationsView.as_view(),
         name="verification-mine",
-    ),
-    path(
-        "verifications/pending/",
-        AdminPendingVerificationsView.as_view(),
-        name="verification-pending",
-    ),
-    path(
-        "verifications/<int:verification_id>/",
-        AdminVerificationDetailView.as_view(),
-        name="verification-detail",
-    ),
-    path(
-        "verifications/<int:verification_id>/review/",
-        AdminReviewVerificationView.as_view(),
-        name="verification-review",
     ),
 ]

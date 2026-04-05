@@ -79,6 +79,10 @@ class ShortletCreateSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
+class UploadImagesSerializer(serializers.Serializer):
+    images = serializers.ListField(child=serializers.ImageField())
+
+
 class AssignHostSerializer(serializers.Serializer):
     host_id = serializers.IntegerField()
     role = serializers.ChoiceField(choices=["HOST", "COHOST"])

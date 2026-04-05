@@ -12,9 +12,7 @@ from accounts.domain.selectors import (
     get_invitations_for_email,
     get_invitations_sent_by_owner,
     get_owners_for_host,
-    get_pending_verifications,
     get_user_by_email,
-    get_verification_by_id,
     get_verifications_for_user,
 )
 from accounts.domain.services import (
@@ -24,7 +22,6 @@ from accounts.domain.services import (
     register_user,
     remove_host,
     resend_otp,
-    review_verification,
     revoke_invitation,
     send_otp,
     submit_verification,
@@ -33,7 +30,6 @@ from accounts.domain.services import (
 from core.utils.responses import success_response
 
 from .permissions import (
-    IsAdminRole,
     IsHostOrOwnerRole,
     IsHostRole,
     IsOwnerRole,
@@ -45,7 +41,6 @@ from .serializers import (
     LoginSerializer,
     MembershipSerializer,
     ResendOTPSerializer,
-    ReviewVerificationSerializer,
     SignupSerializer,
     SubmitVerificationSerializer,
     UserSerializer,
@@ -57,7 +52,7 @@ from .serializers import (
 # --- Auth views ---
 
 
-@extend_schema(tags=["Auth"], request=SignupSerializer)
+@extend_schema(tags=["Auth"], request=SignupSerializer, summary="Signup")
 class SignupView(APIView):
     permission_classes = [AllowAny]
 
@@ -72,7 +67,7 @@ class SignupView(APIView):
         )
 
 
-@extend_schema(tags=["Auth"], request=LoginSerializer)
+@extend_schema(tags=["Auth"], request=LoginSerializer, summary="Login")
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
@@ -89,7 +84,7 @@ class LoginView(APIView):
         )
 
 
-@extend_schema(tags=["Auth"], request=VerifyOTPSerializer)
+@extend_schema(tags=["Auth"], request=VerifyOTPSerializer, summary="Verify OTP")
 class VerifyOTPView(APIView):
     permission_classes = [AllowAny]
 
@@ -113,7 +108,9 @@ class VerifyOTPView(APIView):
         )
 
 
-@extend_schema(tags=["Auth"], request=ResendOTPSerializer)
+@extend_schema(
+    tags=["Auth"], request=ResendOTPSerializer, summary="Resend verification code"
+)
 class ResendOTPView(APIView):
     permission_classes = [AllowAny]
 
@@ -127,7 +124,7 @@ class ResendOTPView(APIView):
         )
 
 
-@extend_schema(tags=["Auth"], request=InvitedSignupSerializer)
+@extend_schema(tags=["Auth"], request=InvitedSignupSerializer, summary="Invited signup")
 class InvitedSignupView(APIView):
     permission_classes = [AllowAny]
 
@@ -155,6 +152,7 @@ class InvitedSignupView(APIView):
     tags=["Invitations"],
     request=CreateInvitationSerializer,
     responses=InvitationSerializer,
+    summary="Create invitation",
 )
 class CreateInvitationView(APIView):
     permission_classes = [IsAuthenticated, IsOwnerRole]
@@ -173,7 +171,11 @@ class CreateInvitationView(APIView):
         )
 
 
-@extend_schema(tags=["Invitations"], responses=InvitationSerializer(many=True))
+@extend_schema(
+    tags=["Invitations"],
+    responses=InvitationSerializer(many=True),
+    summary="Get invitations sent by owner",
+)
 class InvitationListView(APIView):
     permission_classes = [IsAuthenticated, IsOwnerRole]
 
@@ -185,7 +187,11 @@ class InvitationListView(APIView):
         )
 
 
-@extend_schema(tags=["Invitations"], responses=InvitationSerializer)
+@extend_schema(
+    tags=["Invitations"],
+    responses=InvitationSerializer,
+    summary="Revoke invitation by id",
+)
 class RevokeInvitationView(APIView):
     permission_classes = [IsAuthenticated, IsOwnerRole]
 
@@ -200,7 +206,11 @@ class RevokeInvitationView(APIView):
         )
 
 
-@extend_schema(tags=["Invitations"], responses=InvitationSerializer)
+@extend_schema(
+    tags=["Invitations"],
+    responses=InvitationSerializer,
+    summary="Get invitation detail by token",
+)
 class InvitationDetailView(APIView):
     permission_classes = [AllowAny]
 
@@ -214,7 +224,11 @@ class InvitationDetailView(APIView):
         )
 
 
-@extend_schema(tags=["Invitations"], responses=MembershipSerializer)
+@extend_schema(
+    tags=["Invitations"],
+    responses=MembershipSerializer,
+    summary="Accept invitation by token",
+)
 class AcceptInvitationView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -226,7 +240,9 @@ class AcceptInvitationView(APIView):
         )
 
 
-@extend_schema(tags=["Invitations"], responses=InvitationSerializer)
+@extend_schema(
+    tags=["Invitations"], responses=InvitationSerializer, summary="Decline invitation"
+)
 class DeclineInvitationView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -238,7 +254,11 @@ class DeclineInvitationView(APIView):
         )
 
 
-@extend_schema(tags=["Invitations"], responses=InvitationSerializer(many=True))
+@extend_schema(
+    tags=["Invitations"],
+    responses=InvitationSerializer(many=True),
+    summary="Get pending invitations",
+)
 class PendingInvitationsView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -253,7 +273,11 @@ class PendingInvitationsView(APIView):
 # --- Membership views ---
 
 
-@extend_schema(tags=["Memberships"], responses=MembershipSerializer(many=True))
+@extend_schema(
+    tags=["Memberships"],
+    responses=MembershipSerializer(many=True),
+    summary="Get hosts for owner",
+)
 class HostListView(APIView):
     permission_classes = [IsAuthenticated, IsOwnerRole]
 
@@ -265,7 +289,11 @@ class HostListView(APIView):
         )
 
 
-@extend_schema(tags=["Memberships"], responses=MembershipSerializer(many=True))
+@extend_schema(
+    tags=["Memberships"],
+    responses=MembershipSerializer(many=True),
+    summary="Get owners for host",
+)
 class OwnerListView(APIView):
     permission_classes = [IsAuthenticated, IsHostRole]
 
@@ -277,7 +305,9 @@ class OwnerListView(APIView):
         )
 
 
-@extend_schema(tags=["Memberships"], responses=MembershipSerializer)
+@extend_schema(
+    tags=["Memberships"], responses=MembershipSerializer, summary="Remove host"
+)
 class RemoveHostView(APIView):
     permission_classes = [IsAuthenticated, IsOwnerRole]
 
@@ -296,6 +326,7 @@ class RemoveHostView(APIView):
     tags=["Verification"],
     request=SubmitVerificationSerializer,
     responses=VerificationSerializer,
+    summary="Submit verification",
 )
 class SubmitVerificationView(APIView):
     permission_classes = [IsAuthenticated, IsHostOrOwnerRole]
@@ -317,7 +348,11 @@ class SubmitVerificationView(APIView):
         )
 
 
-@extend_schema(tags=["Verification"], responses=VerificationSerializer(many=True))
+@extend_schema(
+    tags=["Verification"],
+    responses=VerificationSerializer(many=True),
+    summary="Get my verifications",
+)
 class MyVerificationsView(APIView):
     permission_classes = [IsAuthenticated, IsHostOrOwnerRole]
 
@@ -326,53 +361,4 @@ class MyVerificationsView(APIView):
         return success_response(
             "Verifications retrieved successfully.",
             VerificationSerializer(verifications, many=True).data,
-        )
-
-
-@extend_schema(tags=["Verification"], responses=VerificationSerializer(many=True))
-class AdminPendingVerificationsView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminRole]
-
-    def get(self, request):
-        verifications = get_pending_verifications()
-        return success_response(
-            "Pending verifications retrieved.",
-            VerificationSerializer(verifications, many=True).data,
-        )
-
-
-@extend_schema(
-    tags=["Verification"],
-    request=ReviewVerificationSerializer,
-    responses=VerificationSerializer,
-)
-class AdminReviewVerificationView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminRole]
-
-    def post(self, request, verification_id):
-        serializer = ReviewVerificationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        verification = review_verification(
-            verification_id=verification_id,
-            admin=request.user,
-            status=serializer.validated_data["status"],
-            admin_notes=serializer.validated_data.get("admin_notes", ""),
-        )
-        return success_response(
-            f"Verification {verification.status.lower()}.",
-            VerificationSerializer(verification).data,
-        )
-
-
-@extend_schema(tags=["Verification"], responses=VerificationSerializer)
-class AdminVerificationDetailView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminRole]
-
-    def get(self, request, verification_id):
-        verification = get_verification_by_id(verification_id=verification_id)
-        if verification is None:
-            raise ValidationError("Verification not found.")
-        return success_response(
-            "Verification retrieved.",
-            VerificationSerializer(verification).data,
         )
