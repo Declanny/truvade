@@ -4,15 +4,17 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('payments', '0001_initial'),
+        ("payments", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='payout',
-            name='recipient_type',
-            field=models.CharField(choices=[('OWNER', 'Owner'), ('HOST', 'Host'), ('COHOST', 'Co-host')], max_length=10),
+            model_name="payout",
+            name="recipient_type",
+            field=models.CharField(
+                choices=[("OWNER", "Owner"), ("HOST", "Host"), ("COHOST", "Co-host")],
+                max_length=10,
+            ),
         ),
     ]
