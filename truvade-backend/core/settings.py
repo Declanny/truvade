@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     "storages",
     "rest_framework_simplejwt",
     "accounts",
-    "properties",
+    "shortlet",
 ]
 
 AUTH_USER_MODEL = "accounts.User"

@@ -5,14 +5,14 @@ from rest_framework.response import Response
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 
 from core.utils.responses import success_response
-from properties.domain.selectors import get_shortlets_for_owner
-from properties.domain.services import (
+from shortlet.domain.selectors import get_shortlets_for_owner
+from shortlet.domain.services import (
     check_shortlet_editable,
     delete_shortlet_image,
     publish_shortlet,
     upload_shortlet_images,
 )
-from properties.models import Shortlet, ShortletImage
+from shortlet.models import Shortlet, ShortletImage
 
 from .permissions import IsOwner
 from .serializers import (

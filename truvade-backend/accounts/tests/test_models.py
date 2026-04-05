@@ -103,7 +103,7 @@ class TestUserModel:
     def test_is_verified_true_with_approved_verification(self, owner):
         IdentityVerification.objects.create(
             user=owner,
-            verification_type="BVN",
+            verification_type="NIN",
             id_number="12345678901",
             id_document="verifications/documents/test.jpg",
             selfie="verifications/selfies/test.jpg",
@@ -114,7 +114,7 @@ class TestUserModel:
     def test_is_verified_false_with_pending_verification(self, owner):
         IdentityVerification.objects.create(
             user=owner,
-            verification_type="BVN",
+            verification_type="NIN",
             id_number="12345678901",
             id_document="verifications/documents/test.jpg",
             selfie="verifications/selfies/test.jpg",
@@ -182,7 +182,7 @@ class TestIdentityVerificationModel:
     def test_create_verification(self, owner):
         v = IdentityVerification.objects.create(
             user=owner,
-            verification_type="BVN",
+            verification_type="NIN",
             id_number="12345678901",
             id_document="verifications/documents/test.jpg",
             selfie="verifications/selfies/test.jpg",

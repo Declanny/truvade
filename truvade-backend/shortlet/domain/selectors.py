@@ -1,4 +1,4 @@
-from properties.models import Shortlet
+from shortlet.models import Shortlet
 
 
 def get_shortlets_for_owner(*, owner):

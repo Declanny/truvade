@@ -378,7 +378,7 @@ class TestSubmitVerificationView:
         resp = api_client.post(
             "/api/v1/verifications/",
             {
-                "verification_type": "BVN",
+                "verification_type": "NIN",
                 "id_number": "12345678901",
                 "id_document": _make_image("id.jpg"),
                 "selfie": _make_image("selfie.jpg"),
@@ -386,14 +386,14 @@ class TestSubmitVerificationView:
             format="multipart",
         )
         assert resp.status_code == status.HTTP_201_CREATED
-        assert resp.data["data"]["verification_type"] == "BVN"
+        assert resp.data["data"]["verification_type"] == "NIN"
 
     def test_403_for_guest(self, api_client, guest):
         api_client.force_authenticate(user=guest)
         resp = api_client.post(
             "/api/v1/verifications/",
             {
-                "verification_type": "BVN",
+                "verification_type": "NIN",
                 "id_number": "12345678901",
                 "id_document": _make_image("id.jpg"),
                 "selfie": _make_image("selfie.jpg"),
@@ -408,7 +408,7 @@ class TestMyVerificationsView:
     def test_returns_own_verifications(self, api_client, owner):
         IdentityVerification.objects.create(
             user=owner,
-            verification_type="BVN",
+            verification_type="NIN",
             id_number="12345678901",
             id_document="verifications/documents/test.jpg",
             selfie="verifications/selfies/test.jpg",
@@ -424,7 +424,7 @@ class TestAdminPendingVerificationsView:
     def test_returns_pending_for_admin(self, api_client, admin_user, owner):
         IdentityVerification.objects.create(
             user=owner,
-            verification_type="BVN",
+            verification_type="NIN",
             id_number="12345678901",
             id_document="verifications/documents/test.jpg",
             selfie="verifications/selfies/test.jpg",
@@ -445,7 +445,7 @@ class TestAdminReviewVerificationView:
     def test_approve_success(self, api_client, admin_user, owner):
         v = IdentityVerification.objects.create(
             user=owner,
-            verification_type="BVN",
+            verification_type="NIN",
             id_number="12345678901",
             id_document="verifications/documents/test.jpg",
             selfie="verifications/selfies/test.jpg",
@@ -463,7 +463,7 @@ class TestAdminReviewVerificationView:
     def test_reject_success(self, api_client, admin_user, owner):
         v = IdentityVerification.objects.create(
             user=owner,
-            verification_type="BVN",
+            verification_type="NIN",
             id_number="12345678901",
             id_document="verifications/documents/test.jpg",
             selfie="verifications/selfies/test.jpg",
@@ -481,7 +481,7 @@ class TestAdminReviewVerificationView:
     def test_403_for_non_admin(self, api_client, owner):
         v = IdentityVerification.objects.create(
             user=owner,
-            verification_type="BVN",
+            verification_type="NIN",
             id_number="12345678901",
             id_document="verifications/documents/test.jpg",
             selfie="verifications/selfies/test.jpg",
@@ -500,7 +500,7 @@ class TestAdminVerificationDetailView:
     def test_returns_verification(self, api_client, admin_user, owner):
         v = IdentityVerification.objects.create(
             user=owner,
-            verification_type="BVN",
+            verification_type="NIN",
             id_number="12345678901",
             id_document="verifications/documents/test.jpg",
             selfie="verifications/selfies/test.jpg",

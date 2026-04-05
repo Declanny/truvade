@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `settings.py` — Django settings (single file, SQLite for dev)
   - URLs, WSGI/ASGI entrypoints
 
-- **App modules:** e.g., `accounts/`, `properties/`, (future: `bookings/`, `payments/`, `messaging/`, `reviews/`, `wishlists/`)
+- **App modules:** e.g., `accounts/`, `shortlet/`, (future: `bookings/`, `payments/`, `messaging/`, `reviews/`, `wishlists/`)
   - `models.py` — ORM definitions
   - `domain/` — business logic split into:
     - `services.py` — write side (create/update flows wrapped in transactions)
@@ -75,10 +75,10 @@ uv run python manage.py migrate && uv run python manage.py runserver
 uv run pytest -q
 
 # Run specific app tests
-uv run pytest properties/tests/ -q
+uv run pytest shortlet/tests/ -q
 
 # Run single test file
-uv run pytest properties/tests/test_models.py -q
+uv run pytest shortlet/tests/test_models.py -q
 
 # Run with verbose output
 uv run pytest -v
@@ -101,7 +101,7 @@ uv run pytest -v
   - Place business logic in `domain/services.py`
   - Place querying/filters in `domain/selectors.py`
   - Keep serializers focused on I/O and validation
-- URLs: define per app (e.g., `properties/api/v1/urls.py`) and include in `core/urls.py`
+- URLs: define per app (e.g., `shortlet/api/v1/urls.py`) and include in `core/urls.py`
 
 ## Formatting & Linting
 
@@ -136,7 +136,7 @@ uv run pytest -v
 
 ### Test Fixtures (conftest.py)
 
-Key fixtures available in `properties/tests/conftest.py`:
+Key fixtures available in `shortlet/tests/conftest.py`:
 - `api_client` — DRF APIClient instance
 - `owner`, `other_owner`, `guest` — User fixtures with roles
 - `property_data` — Dictionary of property creation data

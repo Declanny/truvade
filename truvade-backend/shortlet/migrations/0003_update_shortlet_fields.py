@@ -7,7 +7,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("properties", "0002_rename_property_to_shortlet"),
+        ("shortlet", "0002_rename_property_to_shortlet"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 

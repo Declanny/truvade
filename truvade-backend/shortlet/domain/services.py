@@ -1,7 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
-from properties.models import Shortlet, ShortletImage
+from shortlet.models import Shortlet, ShortletImage
 
 
 @transaction.atomic

@@ -131,7 +131,6 @@ class OwnerHostMembership(models.Model):
 
 class IdentityVerification(models.Model):
     class VerificationType(models.TextChoices):
-        BVN = "BVN", "Bank Verification Number"
         NIN = "NIN", "National Identification Number"
 
     class Status(models.TextChoices):

@@ -403,24 +403,6 @@ class TestRegisterUserWithInvitation:
 
 @pytest.mark.django_db
 class TestSubmitVerification:
-    def test_submit_bvn_verification(self, owner):
-        from django.core.files.uploadedfile import SimpleUploadedFile
-
-        doc = SimpleUploadedFile("id.jpg", b"fake-image", content_type="image/jpeg")
-        selfie = SimpleUploadedFile(
-            "selfie.jpg", b"fake-image", content_type="image/jpeg"
-        )
-        v = submit_verification(
-            user=owner,
-            verification_type="BVN",
-            id_number="12345678901",
-            id_document=doc,
-            selfie=selfie,
-        )
-        assert v.status == "PENDING"
-        assert v.verification_type == "BVN"
-        assert v.user == owner
-
     def test_submit_nin_verification(self, owner):
         from django.core.files.uploadedfile import SimpleUploadedFile
 
@@ -447,13 +429,13 @@ class TestSubmitVerification:
         with pytest.raises(ValidationError, match="Only HOST and OWNER"):
             submit_verification(
                 user=guest,
-                verification_type="BVN",
+                verification_type="NIN",
                 id_number="12345678901",
                 id_document=doc,
                 selfie=selfie,
             )
 
-    def test_invalid_bvn_format_raises(self, owner):
+    def test_invalid_id_number_format_raises(self, owner):
         from django.core.files.uploadedfile import SimpleUploadedFile
 
         doc = SimpleUploadedFile("id.jpg", b"fake-image", content_type="image/jpeg")
@@ -463,7 +445,7 @@ class TestSubmitVerification:
         with pytest.raises(ValidationError, match="11 digits"):
             submit_verification(
                 user=owner,
-                verification_type="BVN",
+                verification_type="NIN",
                 id_number="123",
                 id_document=doc,
                 selfie=selfie,
@@ -478,7 +460,7 @@ class TestSubmitVerification:
         )
         submit_verification(
             user=owner,
-            verification_type="BVN",
+            verification_type="NIN",
             id_number="12345678901",
             id_document=doc1,
             selfie=selfie1,
@@ -490,7 +472,7 @@ class TestSubmitVerification:
         with pytest.raises(ValidationError, match="pending"):
             submit_verification(
                 user=owner,
-                verification_type="BVN",
+                verification_type="NIN",
                 id_number="12345678901",
                 id_document=doc2,
                 selfie=selfie2,
@@ -502,7 +484,7 @@ class TestReviewVerification:
     def test_approve_verification(self, owner, admin_user):
         v = IdentityVerification.objects.create(
             user=owner,
-            verification_type="BVN",
+            verification_type="NIN",
             id_number="12345678901",
             id_document="verifications/documents/test.jpg",
             selfie="verifications/selfies/test.jpg",
@@ -517,7 +499,7 @@ class TestReviewVerification:
     def test_reject_verification(self, owner, admin_user):
         v = IdentityVerification.objects.create(
             user=owner,
-            verification_type="BVN",
+            verification_type="NIN",
             id_number="12345678901",
             id_document="verifications/documents/test.jpg",
             selfie="verifications/selfies/test.jpg",
@@ -534,7 +516,7 @@ class TestReviewVerification:
     def test_non_admin_raises(self, owner):
         v = IdentityVerification.objects.create(
             user=owner,
-            verification_type="BVN",
+            verification_type="NIN",
             id_number="12345678901",
             id_document="verifications/documents/test.jpg",
             selfie="verifications/selfies/test.jpg",
@@ -545,7 +527,7 @@ class TestReviewVerification:
     def test_already_reviewed_raises(self, owner, admin_user):
         v = IdentityVerification.objects.create(
             user=owner,
-            verification_type="BVN",
+            verification_type="NIN",
             id_number="12345678901",
             id_document="verifications/documents/test.jpg",
             selfie="verifications/selfies/test.jpg",

@@ -3,7 +3,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("properties", "0001_initial"),
+        ("shortlet", "0001_initial"),
     ]
 
     operations = [

@@ -1,14 +1,14 @@
 import pytest
 from django.core.exceptions import ValidationError
 
-from properties.domain.services import (
+from shortlet.domain.services import (
     check_shortlet_editable,
     create_shortlet,
     delete_shortlet_image,
     publish_shortlet,
     upload_shortlet_images,
 )
-from properties.models import Shortlet, ShortletImage
+from shortlet.models import Shortlet, ShortletImage
 
 
 @pytest.mark.django_db

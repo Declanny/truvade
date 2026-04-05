@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
 from accounts.models import IdentityVerification
-from properties.models import Shortlet, ShortletImage
+from shortlet.models import Shortlet, ShortletImage
 
 User = get_user_model()
 
@@ -74,7 +74,7 @@ def verified_owner(owner):
     """An owner who has completed identity verification."""
     IdentityVerification.objects.create(
         user=owner,
-        verification_type="BVN",
+        verification_type="NIN",
         id_number="12345678901",
         id_document="verifications/documents/test.jpg",
         selfie="verifications/selfies/test.jpg",

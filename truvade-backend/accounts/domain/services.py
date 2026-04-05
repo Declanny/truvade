@@ -277,8 +277,8 @@ def submit_verification(*, user, verification_type, id_number, id_document, self
     if user.role not in ("HOST", "OWNER"):
         raise ValidationError("Only HOST and OWNER users can submit verification.")
 
-    if verification_type not in ("BVN", "NIN"):
-        raise ValidationError("Verification type must be BVN or NIN.")
+    if verification_type not in ("NIN",):
+        raise ValidationError("Verification type must be NIN.")
 
     if len(id_number) != 11 or not id_number.isdigit():
         raise ValidationError(f"{verification_type} must be exactly 11 digits.")

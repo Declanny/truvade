@@ -1,6 +1,6 @@
 import pytest
 
-from properties.models import Shortlet, ShortletImage
+from shortlet.models import Shortlet, ShortletImage
 
 
 @pytest.mark.django_db

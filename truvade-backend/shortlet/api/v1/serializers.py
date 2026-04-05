@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from properties.models import Shortlet, ShortletImage
+from shortlet.models import Shortlet, ShortletImage
 
 
 class ShortletImageSerializer(serializers.ModelSerializer):

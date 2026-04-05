@@ -95,7 +95,7 @@ class MembershipSerializer(serializers.ModelSerializer):
 
 
 class SubmitVerificationSerializer(serializers.Serializer):
-    verification_type = serializers.ChoiceField(choices=["BVN", "NIN"])
+    verification_type = serializers.ChoiceField(choices=["NIN"])
     id_number = serializers.CharField(max_length=20)
     id_document = serializers.ImageField()
     selfie = serializers.ImageField()

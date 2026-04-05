@@ -1,7 +1,7 @@
 import pytest
 
-from properties.models import ShortletImage
-from properties.api.v1.serializers import ShortletSerializer, ShortletCreateSerializer
+from shortlet.models import ShortletImage
+from shortlet.api.v1.serializers import ShortletSerializer, ShortletCreateSerializer
 
 
 @pytest.mark.django_db

@@ -1,7 +1,7 @@
 import pytest
 from rest_framework import status
 
-from properties.models import ShortletImage
+from shortlet.models import ShortletImage
 
 
 # --- Authentication & Permissions ---
