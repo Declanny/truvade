@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
@@ -53,6 +54,10 @@ from .serializers import (
 )
 
 
+# --- Auth views ---
+
+
+@extend_schema(tags=["Auth"], request=SignupSerializer)
 class SignupView(APIView):
     permission_classes = [AllowAny]
 
@@ -67,6 +72,7 @@ class SignupView(APIView):
         )
 
 
+@extend_schema(tags=["Auth"], request=LoginSerializer)
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
@@ -75,8 +81,6 @@ class LoginView(APIView):
         serializer.is_valid(raise_exception=True)
         user = get_user_by_email(email=serializer.validated_data["email"])
         if user is None:
-            from django.core.exceptions import ValidationError
-
             raise ValidationError("No account found with this email.")
         send_otp(user=user)
         return success_response(
@@ -85,6 +89,7 @@ class LoginView(APIView):
         )
 
 
+@extend_schema(tags=["Auth"], request=VerifyOTPSerializer)
 class VerifyOTPView(APIView):
     permission_classes = [AllowAny]
 
@@ -108,6 +113,7 @@ class VerifyOTPView(APIView):
         )
 
 
+@extend_schema(tags=["Auth"], request=ResendOTPSerializer)
 class ResendOTPView(APIView):
     permission_classes = [AllowAny]
 
@@ -121,97 +127,7 @@ class ResendOTPView(APIView):
         )
 
 
-# --- Invitation views ---
-
-
-class CreateInvitationView(APIView):
-    permission_classes = [IsAuthenticated, IsOwnerRole]
-
-    def post(self, request):
-        serializer = CreateInvitationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        invitation = create_invitation(
-            owner=request.user,
-            email=serializer.validated_data["email"],
-        )
-        return success_response(
-            "Invitation sent successfully.",
-            InvitationSerializer(invitation).data,
-            status_code=status.HTTP_201_CREATED,
-        )
-
-
-class InvitationListView(APIView):
-    permission_classes = [IsAuthenticated, IsOwnerRole]
-
-    def get(self, request):
-        invitations = get_invitations_sent_by_owner(owner=request.user)
-        return success_response(
-            "Invitations retrieved successfully.",
-            InvitationSerializer(invitations, many=True).data,
-        )
-
-
-class RevokeInvitationView(APIView):
-    permission_classes = [IsAuthenticated, IsOwnerRole]
-
-    def post(self, request, invitation_id):
-        invitation = revoke_invitation(
-            invitation_id=invitation_id,
-            owner=request.user,
-        )
-        return success_response(
-            "Invitation revoked.",
-            InvitationSerializer(invitation).data,
-        )
-
-
-class InvitationDetailView(APIView):
-    permission_classes = [AllowAny]
-
-    def get(self, request, token):
-        invitation = get_invitation_by_token(token=token)
-        if invitation is None:
-            raise ValidationError("Invalid invitation token.")
-        return success_response(
-            "Invitation details retrieved.",
-            InvitationSerializer(invitation).data,
-        )
-
-
-class AcceptInvitationView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, token):
-        membership = accept_invitation(token=token, user=request.user)
-        return success_response(
-            "Invitation accepted.",
-            MembershipSerializer(membership).data,
-        )
-
-
-class DeclineInvitationView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, token):
-        invitation = decline_invitation(token=token, user=request.user)
-        return success_response(
-            "Invitation declined.",
-            InvitationSerializer(invitation).data,
-        )
-
-
-class PendingInvitationsView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        invitations = get_invitations_for_email(email=request.user.email)
-        return success_response(
-            "Pending invitations retrieved.",
-            InvitationSerializer(invitations, many=True).data,
-        )
-
-
+@extend_schema(tags=["Auth"], request=InvitedSignupSerializer)
 class InvitedSignupView(APIView):
     permission_classes = [AllowAny]
 
@@ -232,9 +148,112 @@ class InvitedSignupView(APIView):
         )
 
 
+# --- Invitation views ---
+
+
+@extend_schema(
+    tags=["Invitations"],
+    request=CreateInvitationSerializer,
+    responses=InvitationSerializer,
+)
+class CreateInvitationView(APIView):
+    permission_classes = [IsAuthenticated, IsOwnerRole]
+
+    def post(self, request):
+        serializer = CreateInvitationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        invitation = create_invitation(
+            owner=request.user,
+            email=serializer.validated_data["email"],
+        )
+        return success_response(
+            "Invitation sent successfully.",
+            InvitationSerializer(invitation).data,
+            status_code=status.HTTP_201_CREATED,
+        )
+
+
+@extend_schema(tags=["Invitations"], responses=InvitationSerializer(many=True))
+class InvitationListView(APIView):
+    permission_classes = [IsAuthenticated, IsOwnerRole]
+
+    def get(self, request):
+        invitations = get_invitations_sent_by_owner(owner=request.user)
+        return success_response(
+            "Invitations retrieved successfully.",
+            InvitationSerializer(invitations, many=True).data,
+        )
+
+
+@extend_schema(tags=["Invitations"], responses=InvitationSerializer)
+class RevokeInvitationView(APIView):
+    permission_classes = [IsAuthenticated, IsOwnerRole]
+
+    def post(self, request, invitation_id):
+        invitation = revoke_invitation(
+            invitation_id=invitation_id,
+            owner=request.user,
+        )
+        return success_response(
+            "Invitation revoked.",
+            InvitationSerializer(invitation).data,
+        )
+
+
+@extend_schema(tags=["Invitations"], responses=InvitationSerializer)
+class InvitationDetailView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, token):
+        invitation = get_invitation_by_token(token=token)
+        if invitation is None:
+            raise ValidationError("Invalid invitation token.")
+        return success_response(
+            "Invitation details retrieved.",
+            InvitationSerializer(invitation).data,
+        )
+
+
+@extend_schema(tags=["Invitations"], responses=MembershipSerializer)
+class AcceptInvitationView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, token):
+        membership = accept_invitation(token=token, user=request.user)
+        return success_response(
+            "Invitation accepted.",
+            MembershipSerializer(membership).data,
+        )
+
+
+@extend_schema(tags=["Invitations"], responses=InvitationSerializer)
+class DeclineInvitationView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, token):
+        invitation = decline_invitation(token=token, user=request.user)
+        return success_response(
+            "Invitation declined.",
+            InvitationSerializer(invitation).data,
+        )
+
+
+@extend_schema(tags=["Invitations"], responses=InvitationSerializer(many=True))
+class PendingInvitationsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        invitations = get_invitations_for_email(email=request.user.email)
+        return success_response(
+            "Pending invitations retrieved.",
+            InvitationSerializer(invitations, many=True).data,
+        )
+
+
 # --- Membership views ---
 
 
+@extend_schema(tags=["Memberships"], responses=MembershipSerializer(many=True))
 class HostListView(APIView):
     permission_classes = [IsAuthenticated, IsOwnerRole]
 
@@ -246,6 +265,7 @@ class HostListView(APIView):
         )
 
 
+@extend_schema(tags=["Memberships"], responses=MembershipSerializer(many=True))
 class OwnerListView(APIView):
     permission_classes = [IsAuthenticated, IsHostRole]
 
@@ -257,6 +277,7 @@ class OwnerListView(APIView):
         )
 
 
+@extend_schema(tags=["Memberships"], responses=MembershipSerializer)
 class RemoveHostView(APIView):
     permission_classes = [IsAuthenticated, IsOwnerRole]
 
@@ -271,6 +292,11 @@ class RemoveHostView(APIView):
 # --- KYC views ---
 
 
+@extend_schema(
+    tags=["Verification"],
+    request=SubmitVerificationSerializer,
+    responses=VerificationSerializer,
+)
 class SubmitVerificationView(APIView):
     permission_classes = [IsAuthenticated, IsHostOrOwnerRole]
 
@@ -291,6 +317,7 @@ class SubmitVerificationView(APIView):
         )
 
 
+@extend_schema(tags=["Verification"], responses=VerificationSerializer(many=True))
 class MyVerificationsView(APIView):
     permission_classes = [IsAuthenticated, IsHostOrOwnerRole]
 
@@ -302,6 +329,7 @@ class MyVerificationsView(APIView):
         )
 
 
+@extend_schema(tags=["Verification"], responses=VerificationSerializer(many=True))
 class AdminPendingVerificationsView(APIView):
     permission_classes = [IsAuthenticated, IsAdminRole]
 
@@ -313,6 +341,11 @@ class AdminPendingVerificationsView(APIView):
         )
 
 
+@extend_schema(
+    tags=["Verification"],
+    request=ReviewVerificationSerializer,
+    responses=VerificationSerializer,
+)
 class AdminReviewVerificationView(APIView):
     permission_classes = [IsAuthenticated, IsAdminRole]
 
@@ -331,6 +364,7 @@ class AdminReviewVerificationView(APIView):
         )
 
 
+@extend_schema(tags=["Verification"], responses=VerificationSerializer)
 class AdminVerificationDetailView(APIView):
     permission_classes = [IsAuthenticated, IsAdminRole]
 

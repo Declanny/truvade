@@ -210,6 +210,7 @@ class ShortletViewSet(viewsets.ModelViewSet):
         )
 
 
+@extend_schema(tags=["Shortlets"], responses=ShortletSerializer(many=True))
 class HostShortletListView(APIView):
     """Lists shortlets assigned to the authenticated host."""
 
