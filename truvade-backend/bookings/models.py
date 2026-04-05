@@ -43,6 +43,12 @@ class Booking(models.Model):
     host_payout_amount = models.DecimalField(
         max_digits=14, decimal_places=2, default=Decimal("0.00")
     )
+    cohost_commission_percentage = models.DecimalField(
+        max_digits=5, decimal_places=2, default=Decimal("0.00")
+    )
+    cohost_payout_amount = models.DecimalField(
+        max_digits=14, decimal_places=2, default=Decimal("0.00")
+    )
     owner_payout_amount = models.DecimalField(
         max_digits=14, decimal_places=2, default=Decimal("0.00")
     )

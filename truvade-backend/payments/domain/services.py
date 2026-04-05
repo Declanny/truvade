@@ -209,6 +209,29 @@ def create_payouts_for_payment(*, payment):
                     )
                 )
 
+    # Cohost payout
+    if booking.cohost_payout_amount > 0:
+        from shortlet.models import ShortletHostAssignment
+
+        cohost_assignment = ShortletHostAssignment.objects.filter(
+            shortlet=booking.shortlet, role="COHOST"
+        ).first()
+        if cohost_assignment:
+            cohost_account = BankAccount.objects.filter(
+                user=cohost_assignment.host, is_active=True, is_default=True
+            ).first()
+            if cohost_account and cohost_account.paystack_recipient_code:
+                payouts.append(
+                    Payout.objects.create(
+                        payment=payment,
+                        bank_account=cohost_account,
+                        recipient_type=Payout.RecipientType.COHOST,
+                        amount=booking.cohost_payout_amount,
+                        amount_kobo=int(booking.cohost_payout_amount * 100),
+                        transfer_reference=f"TRV-PAY-COHOST-{payment.pk}-{uuid.uuid4().hex[:8]}",
+                    )
+                )
+
     return payouts
 
 

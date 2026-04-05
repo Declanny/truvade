@@ -79,7 +79,21 @@ def create_booking(
     host_payout_amount = (subtotal * host_commission_percentage / HUNDRED).quantize(
         Decimal("0.01")
     )
-    owner_payout_amount = subtotal - host_payout_amount
+
+    # Snapshot cohost commission from the COHOST assignment (if assigned)
+    cohost_assignment = ShortletHostAssignment.objects.filter(
+        shortlet=shortlet, role="COHOST"
+    ).first()
+    cohost_commission_percentage = (
+        cohost_assignment.commission_percentage
+        if cohost_assignment
+        else Decimal("0.00")
+    )
+    cohost_payout_amount = (subtotal * cohost_commission_percentage / HUNDRED).quantize(
+        Decimal("0.01")
+    )
+
+    owner_payout_amount = subtotal - host_payout_amount - cohost_payout_amount
 
     return Booking.objects.create(
         guest=guest,
@@ -97,6 +111,8 @@ def create_booking(
         guest_note=guest_note,
         host_commission_percentage=host_commission_percentage,
         host_payout_amount=host_payout_amount,
+        cohost_commission_percentage=cohost_commission_percentage,
+        cohost_payout_amount=cohost_payout_amount,
         owner_payout_amount=owner_payout_amount,
     )
 

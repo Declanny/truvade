@@ -45,6 +45,8 @@ class BookingReadSerializer(serializers.ModelSerializer):
             "currency",
             "host_commission_percentage",
             "host_payout_amount",
+            "cohost_commission_percentage",
+            "cohost_payout_amount",
             "owner_payout_amount",
             "status",
             "guest_note",
@@ -62,6 +64,12 @@ class CreateBookingSerializer(serializers.Serializer):
     check_out = serializers.DateField()
     number_of_guests = serializers.IntegerField(min_value=1)
     guest_note = serializers.CharField(required=False, allow_blank=True, default="")
+
+
+class PaymentSummarySerializer(serializers.Serializer):
+    reference = serializers.CharField()
+    authorization_url = serializers.CharField(source="paystack_authorization_url")
+    status = serializers.CharField()
 
 
 class CancelBookingSerializer(serializers.Serializer):

@@ -1,9 +1,19 @@
 import datetime
+from unittest.mock import patch
 
 import pytest
 from django.urls import reverse
 
 from bookings.models import Booking
+
+MOCK_PAYSTACK_INIT = {
+    "status": True,
+    "data": {
+        "authorization_url": "https://checkout.paystack.com/test",
+        "access_code": "acc_test",
+        "reference": "ref_test",
+    },
+}
 
 
 # --- Create Booking ---
@@ -27,14 +37,26 @@ class TestCreateBookingView:
         response = api_client.post(self.url, booking_data)
         assert response.status_code == 403
 
-    def test_guest_creates_booking(self, api_client, guest, booking_data):
+    @patch("payments.domain.services.PaystackClient")
+    def test_guest_creates_booking_with_payment(
+        self, MockClient, api_client, guest, booking_data
+    ):
+        MockClient.return_value.initialize_transaction.return_value = MOCK_PAYSTACK_INIT
         api_client.force_authenticate(user=guest)
         response = api_client.post(self.url, booking_data)
         assert response.status_code == 201
         assert response.data["data"]["status"] == "PENDING"
         assert response.data["data"]["number_of_guests"] == 4
+        # Payment info included in response
+        assert "payment" in response.data["data"]
+        assert response.data["data"]["payment"]["authorization_url"] == (
+            "https://checkout.paystack.com/test"
+        )
+        assert "reference" in response.data["data"]["payment"]
 
-    def test_returns_pricing_details(self, api_client, guest, booking_data):
+    @patch("payments.domain.services.PaystackClient")
+    def test_returns_pricing_details(self, MockClient, api_client, guest, booking_data):
+        MockClient.return_value.initialize_transaction.return_value = MOCK_PAYSTACK_INIT
         api_client.force_authenticate(user=guest)
         response = api_client.post(self.url, booking_data)
         assert response.status_code == 201

@@ -28,11 +28,14 @@ from .permissions import (
     IsBookingParticipant,
     IsGuestRole,
 )
+from payments.domain.services import initialize_payment
+
 from .serializers import (
     AvailabilitySerializer,
     BookingReadSerializer,
     CancelBookingSerializer,
     CreateBookingSerializer,
+    PaymentSummarySerializer,
 )
 
 
@@ -71,9 +74,14 @@ class CreateBookingView(APIView):
             number_of_guests=serializer.validated_data["number_of_guests"],
             guest_note=serializer.validated_data.get("guest_note", ""),
         )
+
+        payment = initialize_payment(booking=booking)
+
+        data = BookingReadSerializer(booking).data
+        data["payment"] = PaymentSummarySerializer(payment).data
         return success_response(
             "Booking created successfully.",
-            BookingReadSerializer(booking).data,
+            data,
             status_code=status.HTTP_201_CREATED,
         )
 

@@ -276,6 +276,69 @@ class TestCreatePayoutsForPayment:
         assert len(payouts) == 1
         assert payouts[0].recipient_type == "OWNER"
 
+    def test_creates_cohost_payout_when_assigned(
+        self,
+        successful_payment,
+        owner_bank_account,
+        host_bank_account,
+        pending_booking,
+        active_shortlet,
+        verified_owner,
+    ):
+        """When a cohost is assigned with commission, a cohost payout is created."""
+        from accounts.models import IdentityVerification, OwnerHostMembership
+        from django.contrib.auth import get_user_model
+        from shortlet.models import ShortletHostAssignment
+
+        User = get_user_model()
+        cohost = User.objects.create_user(
+            email="cohost@example.com", password="testpass123", role="HOST"
+        )
+        IdentityVerification.objects.create(
+            user=cohost,
+            verification_type="NIN",
+            id_number="66677788899",
+            id_document="verifications/documents/test.jpg",
+            selfie="verifications/selfies/test.jpg",
+            status="APPROVED",
+        )
+        OwnerHostMembership.objects.create(owner=verified_owner, host=cohost)
+        ShortletHostAssignment.objects.create(
+            shortlet=active_shortlet,
+            host=cohost,
+            role="COHOST",
+            assigned_by=verified_owner,
+            commission_percentage=Decimal("5.00"),
+        )
+        cohost_bank = BankAccount.objects.create(
+            user=cohost,
+            bank_name="UBA",
+            bank_code="033",
+            account_number="5555555555",
+            account_name="Co-Host User",
+            paystack_recipient_code="RCP_cohost789",
+            is_default=True,
+        )
+
+        pending_booking.status = Booking.Status.CONFIRMED
+        pending_booking.cohost_commission_percentage = Decimal("5.00")
+        pending_booking.cohost_payout_amount = Decimal("7750.00")
+        pending_booking.owner_payout_amount = (
+            pending_booking.subtotal
+            - pending_booking.host_payout_amount
+            - Decimal("7750.00")
+        )
+        pending_booking.save()
+
+        payouts = create_payouts_for_payment(payment=successful_payment)
+
+        assert len(payouts) == 3
+        types = {p.recipient_type for p in payouts}
+        assert types == {"OWNER", "HOST", "COHOST"}
+        cohost_payout = next(p for p in payouts if p.recipient_type == "COHOST")
+        assert cohost_payout.amount == Decimal("7750.00")
+        assert cohost_payout.bank_account == cohost_bank
+
 
 @pytest.mark.django_db
 class TestInitiatePayout:

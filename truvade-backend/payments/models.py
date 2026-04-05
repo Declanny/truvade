@@ -85,6 +85,7 @@ class Payout(models.Model):
     class RecipientType(models.TextChoices):
         OWNER = "OWNER", "Owner"
         HOST = "HOST", "Host"
+        COHOST = "COHOST", "Co-host"
 
     payment = models.ForeignKey(
         Payment,

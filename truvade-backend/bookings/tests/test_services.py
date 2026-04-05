@@ -11,6 +11,7 @@ from bookings.domain.services import (
     create_booking,
 )
 from bookings.models import Booking
+from shortlet.models import ShortletHostAssignment
 
 
 @pytest.mark.django_db
@@ -104,6 +105,79 @@ class TestCreateBooking:
         assert booking.host_commission_percentage == Decimal("10.00")
         assert booking.host_payout_amount == expected_host
         assert booking.owner_payout_amount == booking.subtotal - expected_host
+
+    def test_cohost_commission_snapshot(self, guest, active_shortlet):
+        """Add a cohost with 5% commission, verify snapshot."""
+        from accounts.models import IdentityVerification, OwnerHostMembership
+        from django.contrib.auth import get_user_model
+
+        User = get_user_model()
+        cohost = User.objects.create_user(
+            email="cohost@example.com", password="testpass123", role="HOST"
+        )
+        IdentityVerification.objects.create(
+            user=cohost,
+            verification_type="NIN",
+            id_number="66677788899",
+            id_document="verifications/documents/test.jpg",
+            selfie="verifications/selfies/test.jpg",
+            status="APPROVED",
+        )
+        OwnerHostMembership.objects.create(owner=active_shortlet.owner, host=cohost)
+        ShortletHostAssignment.objects.create(
+            shortlet=active_shortlet,
+            host=cohost,
+            role="COHOST",
+            assigned_by=active_shortlet.owner,
+            commission_percentage=Decimal("5.00"),
+        )
+
+        # Also set host to 10%
+        host_assignment = ShortletHostAssignment.objects.get(
+            shortlet=active_shortlet, role="HOST"
+        )
+        host_assignment.commission_percentage = Decimal("10.00")
+        host_assignment.save()
+
+        check_in = datetime.date.today() + datetime.timedelta(days=10)
+        check_out = check_in + datetime.timedelta(days=4)
+
+        booking = create_booking(
+            guest=guest,
+            shortlet=active_shortlet,
+            check_in=check_in,
+            check_out=check_out,
+            number_of_guests=2,
+        )
+
+        expected_host = (booking.subtotal * Decimal("10") / Decimal("100")).quantize(
+            Decimal("0.01")
+        )
+        expected_cohost = (booking.subtotal * Decimal("5") / Decimal("100")).quantize(
+            Decimal("0.01")
+        )
+        assert booking.host_commission_percentage == Decimal("10.00")
+        assert booking.host_payout_amount == expected_host
+        assert booking.cohost_commission_percentage == Decimal("5.00")
+        assert booking.cohost_payout_amount == expected_cohost
+        assert booking.owner_payout_amount == (
+            booking.subtotal - expected_host - expected_cohost
+        )
+
+    def test_no_cohost_means_zero(self, guest, active_shortlet):
+        """Without cohost, cohost fields default to zero."""
+        check_in = datetime.date.today() + datetime.timedelta(days=10)
+        check_out = check_in + datetime.timedelta(days=3)
+
+        booking = create_booking(
+            guest=guest,
+            shortlet=active_shortlet,
+            check_in=check_in,
+            check_out=check_out,
+            number_of_guests=2,
+        )
+        assert booking.cohost_commission_percentage == Decimal("0.00")
+        assert booking.cohost_payout_amount == Decimal("0.00")
 
     def test_guest_note_stored(self, guest, active_shortlet):
         check_in = datetime.date.today() + datetime.timedelta(days=10)
