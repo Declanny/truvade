@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "truvade-backend/**"
+      - ".github/workflows/deploy.yml"
 
 env:
   REGISTRY: ghcr.io
