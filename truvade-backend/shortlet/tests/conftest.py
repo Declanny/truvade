@@ -2,8 +2,8 @@ import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
-from accounts.models import IdentityVerification
-from shortlet.models import Shortlet, ShortletImage
+from accounts.models import IdentityVerification, OwnerHostMembership
+from shortlet.models import Shortlet, ShortletHostAssignment, ShortletImage
 
 User = get_user_model()
 
@@ -104,3 +104,74 @@ def publishable_shortlet(verified_owner):
             shortlet=shortlet, image=f"shortlets/img{i}.jpg", order=i
         )
     return shortlet
+
+
+@pytest.fixture
+def host(db, owner):
+    """A verified host linked to owner via membership."""
+    user = User.objects.create_user(
+        email="host@example.com", password="testpass123", role="HOST", name="Test Host"
+    )
+    IdentityVerification.objects.create(
+        user=user,
+        verification_type="NIN",
+        id_number="99988877766",
+        id_document="verifications/documents/test.jpg",
+        selfie="verifications/selfies/test.jpg",
+        status="APPROVED",
+    )
+    OwnerHostMembership.objects.create(owner=owner, host=user)
+    return user
+
+
+@pytest.fixture
+def another_host(db, owner):
+    """A second verified host linked to owner."""
+    user = User.objects.create_user(
+        email="host2@example.com", password="testpass123", role="HOST", name="Host Two"
+    )
+    IdentityVerification.objects.create(
+        user=user,
+        verification_type="NIN",
+        id_number="11122233344",
+        id_document="verifications/documents/test.jpg",
+        selfie="verifications/selfies/test.jpg",
+        status="APPROVED",
+    )
+    OwnerHostMembership.objects.create(owner=owner, host=user)
+    return user
+
+
+@pytest.fixture
+def unverified_host(db, owner):
+    """A host linked to owner but NOT verified."""
+    user = User.objects.create_user(
+        email="unverified-host@example.com", password="testpass123", role="HOST"
+    )
+    OwnerHostMembership.objects.create(owner=owner, host=user)
+    return user
+
+
+@pytest.fixture
+def unlinked_host(db):
+    """A verified host NOT linked to any owner."""
+    user = User.objects.create_user(
+        email="unlinked-host@example.com", password="testpass123", role="HOST"
+    )
+    IdentityVerification.objects.create(
+        user=user,
+        verification_type="NIN",
+        id_number="55566677788",
+        id_document="verifications/documents/test.jpg",
+        selfie="verifications/selfies/test.jpg",
+        status="APPROVED",
+    )
+    return user
+
+
+@pytest.fixture
+def assignment(draft_shortlet, host, owner):
+    """Host assigned to draft_shortlet as HOST role."""
+    return ShortletHostAssignment.objects.create(
+        shortlet=draft_shortlet, host=host, role="HOST", assigned_by=owner
+    )

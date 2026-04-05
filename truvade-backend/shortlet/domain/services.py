@@ -1,7 +1,8 @@
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
-from shortlet.models import Shortlet, ShortletImage
+from accounts.models import OwnerHostMembership
+from shortlet.models import Shortlet, ShortletHostAssignment, ShortletImage
 
 
 @transaction.atomic
@@ -67,3 +68,62 @@ def delete_shortlet_image(*, shortlet, image_id):
     except ShortletImage.DoesNotExist:
         raise
     image.delete()
+
+
+# --- Host Assignment ---
+
+
+@transaction.atomic
+def assign_host_to_shortlet(*, shortlet, host, role, assigned_by):
+    """Assign a verified host to a shortlet as HOST or COHOST."""
+    if host.role != "HOST":
+        raise ValidationError("Only users with the HOST role can be assigned.")
+
+    if not host.is_verified:
+        raise ValidationError("Host must be verified before assignment.")
+
+    if not OwnerHostMembership.objects.filter(
+        owner=shortlet.owner, host=host, is_active=True
+    ).exists():
+        raise ValidationError("Host is not linked to this shortlet's owner.")
+
+    if ShortletHostAssignment.objects.filter(shortlet=shortlet, host=host).exists():
+        raise ValidationError("This host is already assigned to this shortlet.")
+
+    if ShortletHostAssignment.objects.filter(shortlet=shortlet, role=role).exists():
+        raise ValidationError(f"A {role} is already assigned to this shortlet.")
+
+    return ShortletHostAssignment.objects.create(
+        shortlet=shortlet, host=host, role=role, assigned_by=assigned_by
+    )
+
+
+@transaction.atomic
+def unassign_host_from_shortlet(*, shortlet, assignment_id, owner):
+    """Remove a host assignment from a shortlet."""
+    try:
+        assignment = ShortletHostAssignment.objects.get(
+            id=assignment_id, shortlet=shortlet, shortlet__owner=owner
+        )
+    except ShortletHostAssignment.DoesNotExist:
+        raise ValidationError("Assignment not found.")
+
+    assignment.delete()
+
+
+@transaction.atomic
+def update_host_assignment_permissions(
+    *, assignment_id, owner, can_edit, can_upload_images
+):
+    """Update permissions for a host assignment."""
+    try:
+        assignment = ShortletHostAssignment.objects.get(
+            id=assignment_id, shortlet__owner=owner
+        )
+    except ShortletHostAssignment.DoesNotExist:
+        raise ValidationError("Assignment not found.")
+
+    assignment.can_edit = can_edit
+    assignment.can_upload_images = can_upload_images
+    assignment.save()
+    return assignment

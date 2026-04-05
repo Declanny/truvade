@@ -72,3 +72,35 @@ class ShortletImage(models.Model):
 
     def __str__(self):
         return f"Image {self.order} for {self.shortlet.title}"
+
+
+class ShortletHostAssignment(models.Model):
+    class Role(models.TextChoices):
+        HOST = "HOST", "Host"
+        COHOST = "COHOST", "Co-host"
+
+    shortlet = models.ForeignKey(
+        Shortlet, on_delete=models.CASCADE, related_name="host_assignments"
+    )
+    host = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="shortlet_assignments",
+    )
+    role = models.CharField(max_length=10, choices=Role.choices)
+    assigned_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="+",
+    )
+    can_edit = models.BooleanField(default=False)
+    can_upload_images = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [("shortlet", "role")]
+        ordering = ["role"]
+
+    def __str__(self):
+        return f"{self.host.email} as {self.role} for {self.shortlet.title}"

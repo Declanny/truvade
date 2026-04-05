@@ -2,13 +2,16 @@ import pytest
 from django.core.exceptions import ValidationError
 
 from shortlet.domain.services import (
+    assign_host_to_shortlet,
     check_shortlet_editable,
     create_shortlet,
     delete_shortlet_image,
     publish_shortlet,
+    unassign_host_from_shortlet,
+    update_host_assignment_permissions,
     upload_shortlet_images,
 )
-from shortlet.models import Shortlet, ShortletImage
+from shortlet.models import Shortlet, ShortletHostAssignment, ShortletImage
 
 
 @pytest.mark.django_db
@@ -178,3 +181,138 @@ class TestDeleteShortletImage:
     def test_raises_for_nonexistent_image(self, draft_shortlet):
         with pytest.raises(ShortletImage.DoesNotExist):
             delete_shortlet_image(shortlet=draft_shortlet, image_id=99999)
+
+
+# --- Host Assignment ---
+
+
+@pytest.mark.django_db
+class TestAssignHostToShortlet:
+    def test_assign_verified_host(self, draft_shortlet, host, owner):
+        assignment = assign_host_to_shortlet(
+            shortlet=draft_shortlet, host=host, role="HOST", assigned_by=owner
+        )
+        assert assignment.shortlet == draft_shortlet
+        assert assignment.host == host
+        assert assignment.role == "HOST"
+        assert assignment.assigned_by == owner
+        assert assignment.can_edit is False
+        assert assignment.can_upload_images is False
+
+    def test_assign_cohost(self, draft_shortlet, another_host, owner):
+        assignment = assign_host_to_shortlet(
+            shortlet=draft_shortlet,
+            host=another_host,
+            role="COHOST",
+            assigned_by=owner,
+        )
+        assert assignment.role == "COHOST"
+
+    def test_assign_both_host_and_cohost(
+        self, draft_shortlet, host, another_host, owner
+    ):
+        assign_host_to_shortlet(
+            shortlet=draft_shortlet, host=host, role="HOST", assigned_by=owner
+        )
+        assign_host_to_shortlet(
+            shortlet=draft_shortlet,
+            host=another_host,
+            role="COHOST",
+            assigned_by=owner,
+        )
+        assert draft_shortlet.host_assignments.count() == 2
+
+    def test_unverified_host_raises(self, draft_shortlet, unverified_host, owner):
+        with pytest.raises(ValidationError, match="verified"):
+            assign_host_to_shortlet(
+                shortlet=draft_shortlet,
+                host=unverified_host,
+                role="HOST",
+                assigned_by=owner,
+            )
+
+    def test_unlinked_host_raises(self, draft_shortlet, unlinked_host, owner):
+        with pytest.raises(ValidationError, match="not linked"):
+            assign_host_to_shortlet(
+                shortlet=draft_shortlet,
+                host=unlinked_host,
+                role="HOST",
+                assigned_by=owner,
+            )
+
+    def test_duplicate_role_raises(self, draft_shortlet, host, another_host, owner):
+        assign_host_to_shortlet(
+            shortlet=draft_shortlet, host=host, role="HOST", assigned_by=owner
+        )
+        with pytest.raises(ValidationError, match="already assigned"):
+            assign_host_to_shortlet(
+                shortlet=draft_shortlet,
+                host=another_host,
+                role="HOST",
+                assigned_by=owner,
+            )
+
+    def test_same_host_both_roles_raises(self, draft_shortlet, host, owner):
+        assign_host_to_shortlet(
+            shortlet=draft_shortlet, host=host, role="HOST", assigned_by=owner
+        )
+        with pytest.raises(ValidationError, match="already assigned"):
+            assign_host_to_shortlet(
+                shortlet=draft_shortlet, host=host, role="COHOST", assigned_by=owner
+            )
+
+    def test_non_host_role_raises(self, draft_shortlet, owner):
+        """A user with GUEST role can't be assigned."""
+        from django.contrib.auth import get_user_model
+
+        User = get_user_model()
+        guest = User.objects.create_user(email="guestuser@example.com", role="GUEST")
+        with pytest.raises(ValidationError, match="HOST role"):
+            assign_host_to_shortlet(
+                shortlet=draft_shortlet, host=guest, role="HOST", assigned_by=owner
+            )
+
+
+@pytest.mark.django_db
+class TestUnassignHostFromShortlet:
+    def test_unassign(self, draft_shortlet, assignment, owner):
+        unassign_host_from_shortlet(
+            shortlet=draft_shortlet, assignment_id=assignment.id, owner=owner
+        )
+        assert not ShortletHostAssignment.objects.filter(id=assignment.id).exists()
+
+    def test_not_found_raises(self, draft_shortlet, owner):
+        with pytest.raises(ValidationError, match="not found"):
+            unassign_host_from_shortlet(
+                shortlet=draft_shortlet, assignment_id=999, owner=owner
+            )
+
+    def test_wrong_owner_raises(self, draft_shortlet, assignment, other_owner):
+        with pytest.raises(ValidationError, match="not found"):
+            unassign_host_from_shortlet(
+                shortlet=draft_shortlet,
+                assignment_id=assignment.id,
+                owner=other_owner,
+            )
+
+
+@pytest.mark.django_db
+class TestUpdateHostAssignmentPermissions:
+    def test_update_permissions(self, assignment, owner):
+        result = update_host_assignment_permissions(
+            assignment_id=assignment.id,
+            owner=owner,
+            can_edit=True,
+            can_upload_images=True,
+        )
+        assert result.can_edit is True
+        assert result.can_upload_images is True
+
+    def test_wrong_owner_raises(self, assignment, other_owner):
+        with pytest.raises(ValidationError, match="not found"):
+            update_host_assignment_permissions(
+                assignment_id=assignment.id,
+                owner=other_owner,
+                can_edit=True,
+                can_upload_images=False,
+            )

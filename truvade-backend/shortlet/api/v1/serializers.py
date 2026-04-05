@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from shortlet.models import Shortlet, ShortletImage
+from accounts.models import User
+from shortlet.models import Shortlet, ShortletHostAssignment, ShortletImage
 
 
 class ShortletImageSerializer(serializers.ModelSerializer):
@@ -10,8 +11,29 @@ class ShortletImageSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
 
+class ShortletHostAssignmentSerializer(serializers.ModelSerializer):
+    host_name = serializers.CharField(source="host.name", read_only=True)
+    host_email = serializers.EmailField(source="host.email", read_only=True)
+
+    class Meta:
+        model = ShortletHostAssignment
+        fields = [
+            "id",
+            "host",
+            "host_name",
+            "host_email",
+            "role",
+            "can_edit",
+            "can_upload_images",
+            "assigned_by",
+            "created_at",
+        ]
+        read_only_fields = fields
+
+
 class ShortletSerializer(serializers.ModelSerializer):
     images = ShortletImageSerializer(many=True, read_only=True)
+    host_assignments = ShortletHostAssignmentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Shortlet
@@ -40,6 +62,7 @@ class ShortletSerializer(serializers.ModelSerializer):
             "verified",
             "guest_favorite",
             "images",
+            "host_assignments",
             "created_at",
             "updated_at",
         ]
@@ -54,3 +77,20 @@ class ShortletCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data["status"] = Shortlet.Status.DRAFT
         return super().create(validated_data)
+
+
+class AssignHostSerializer(serializers.Serializer):
+    host_id = serializers.IntegerField()
+    role = serializers.ChoiceField(choices=["HOST", "COHOST"])
+
+
+class UpdateAssignmentPermissionsSerializer(serializers.Serializer):
+    can_edit = serializers.BooleanField()
+    can_upload_images = serializers.BooleanField()
+
+
+class AvailableHostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "name", "email"]
+        read_only_fields = fields

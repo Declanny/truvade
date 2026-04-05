@@ -1,7 +1,7 @@
 import pytest
 from rest_framework import status
 
-from shortlet.models import ShortletImage
+from shortlet.models import ShortletHostAssignment, ShortletImage
 
 
 # --- Authentication & Permissions ---
@@ -272,3 +272,134 @@ class TestShortletImageDelete:
             f"/api/v1/shortlets/{draft_shortlet.id}/images/{image.id}/"
         )
         assert resp.status_code == status.HTTP_404_NOT_FOUND
+
+
+# --- Host Assignment ---
+
+
+@pytest.mark.django_db
+class TestAssignHostView:
+    def test_assign_success(self, api_client, owner, draft_shortlet, host):
+        api_client.force_authenticate(user=owner)
+        resp = api_client.post(
+            f"/api/v1/shortlets/{draft_shortlet.id}/assign-host/",
+            {"host_id": host.id, "role": "HOST"},
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_201_CREATED
+        assert resp.data["data"]["role"] == "HOST"
+        assert resp.data["data"]["host"] == host.id
+
+    def test_403_for_non_owner(self, api_client, guest, draft_shortlet, host):
+        api_client.force_authenticate(user=guest)
+        resp = api_client.post(
+            f"/api/v1/shortlets/{draft_shortlet.id}/assign-host/",
+            {"host_id": host.id, "role": "HOST"},
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_400_unverified_host(
+        self, api_client, owner, draft_shortlet, unverified_host
+    ):
+        api_client.force_authenticate(user=owner)
+        resp = api_client.post(
+            f"/api/v1/shortlets/{draft_shortlet.id}/assign-host/",
+            {"host_id": unverified_host.id, "role": "HOST"},
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_400_unlinked_host(self, api_client, owner, draft_shortlet, unlinked_host):
+        api_client.force_authenticate(user=owner)
+        resp = api_client.post(
+            f"/api/v1/shortlets/{draft_shortlet.id}/assign-host/",
+            {"host_id": unlinked_host.id, "role": "HOST"},
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+class TestUnassignHostView:
+    def test_unassign_success(self, api_client, owner, draft_shortlet, assignment):
+        api_client.force_authenticate(user=owner)
+        resp = api_client.delete(
+            f"/api/v1/shortlets/{draft_shortlet.id}/assignments/{assignment.id}/"
+        )
+        assert resp.status_code == status.HTTP_204_NO_CONTENT
+        assert not ShortletHostAssignment.objects.filter(id=assignment.id).exists()
+
+    def test_404_wrong_shortlet(self, api_client, owner, assignment):
+        api_client.force_authenticate(user=owner)
+        resp = api_client.delete("/api/v1/shortlets/99999/assignments/{assignment.id}/")
+        assert resp.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db
+class TestUpdateAssignmentPermissionsView:
+    def test_update_success(self, api_client, owner, draft_shortlet, assignment):
+        api_client.force_authenticate(user=owner)
+        resp = api_client.patch(
+            f"/api/v1/shortlets/{draft_shortlet.id}/assignments/{assignment.id}/permissions/",
+            {"can_edit": True, "can_upload_images": True},
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.data["data"]["can_edit"] is True
+        assert resp.data["data"]["can_upload_images"] is True
+
+
+@pytest.mark.django_db
+class TestAvailableHostsView:
+    def test_returns_available_hosts(
+        self, api_client, owner, draft_shortlet, host, another_host
+    ):
+        api_client.force_authenticate(user=owner)
+        resp = api_client.get(f"/api/v1/shortlets/{draft_shortlet.id}/available-hosts/")
+        assert resp.status_code == status.HTTP_200_OK
+        assert len(resp.data["data"]) == 2
+
+    def test_excludes_already_assigned(
+        self, api_client, owner, draft_shortlet, host, another_host, assignment
+    ):
+        api_client.force_authenticate(user=owner)
+        resp = api_client.get(f"/api/v1/shortlets/{draft_shortlet.id}/available-hosts/")
+        assert resp.status_code == status.HTTP_200_OK
+        assert len(resp.data["data"]) == 1
+        assert resp.data["data"][0]["id"] == another_host.id
+
+
+@pytest.mark.django_db
+class TestHostShortletListView:
+    def test_host_sees_assigned_shortlets(
+        self, api_client, host, draft_shortlet, assignment
+    ):
+        api_client.force_authenticate(user=host)
+        resp = api_client.get("/api/v1/my-shortlets/")
+        assert resp.status_code == status.HTTP_200_OK
+        assert len(resp.data["data"]) == 1
+        assert resp.data["data"][0]["id"] == draft_shortlet.id
+
+    def test_403_for_non_host(self, api_client, owner):
+        api_client.force_authenticate(user=owner)
+        resp = api_client.get("/api/v1/my-shortlets/")
+        assert resp.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_host_without_assignments_gets_empty(self, api_client, host):
+        api_client.force_authenticate(user=host)
+        resp = api_client.get("/api/v1/my-shortlets/")
+        assert resp.status_code == status.HTTP_200_OK
+        assert len(resp.data["data"]) == 0
+
+
+@pytest.mark.django_db
+class TestShortletResponseIncludesAssignments:
+    def test_shortlet_detail_includes_host_assignments(
+        self, api_client, owner, draft_shortlet, assignment
+    ):
+        api_client.force_authenticate(user=owner)
+        resp = api_client.get(f"/api/v1/shortlets/{draft_shortlet.id}/")
+        assert resp.status_code == status.HTTP_200_OK
+        assert "host_assignments" in resp.data["data"]
+        assert len(resp.data["data"]["host_assignments"]) == 1
