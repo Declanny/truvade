@@ -1,0 +1,27 @@
+{% extends "emails/base.html" %}
+
+{% block title %}You've Been Invited - Truvade{% endblock %}
+
+{% block content %}
+<h2 style="margin: 0 0 16px; font-size: 20px; color: #1a1a2e;">You've Been Invited</h2>
+<p style="margin: 0 0 24px; font-size: 15px; color: #51545e; line-height: 1.6;">
+  <strong>{{ owner_display }}</strong> has invited you to join Truvade as a host.
+  Create your account to get started.
+</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+  <tr>
+    <td align="center" style="padding: 8px 0 24px;">
+      <a href="{{ link }}" style="display: inline-block; background-color: #1a1a2e; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 600; padding: 12px 32px; border-radius: 6px;">
+        Create Account
+      </a>
+    </td>
+  </tr>
+</table>
+<p style="margin: 0 0 8px; font-size: 14px; color: #9a9a9a; line-height: 1.6;">
+  This invitation expires in {{ expiry_days }} days.
+</p>
+<p style="margin: 0; font-size: 14px; color: #9a9a9a; line-height: 1.6;">
+  If the button doesn't work, copy and paste this link into your browser:<br>
+  <a href="{{ link }}" style="color: #1a1a2e; word-break: break-all;">{{ link }}</a>
+</p>
+{% endblock %}
