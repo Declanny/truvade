@@ -101,7 +101,7 @@ class TestShortletCRUD:
 
 @pytest.mark.django_db
 class TestShortletStepByStepFlow:
-    def test_full_listing_flow(self, api_client, verified_owner):
+    def test_full_listing_flow(self, api_client, verified_owner, host):
         api_client.force_authenticate(user=verified_owner)
 
         # Step 1: Create with only shortlet type
@@ -133,7 +133,15 @@ class TestShortletStepByStepFlow:
                 shortlet_id=shortlet_id, image=f"shortlets/img{i}.jpg", order=i
             )
 
-        # Step 4: Publish
+        # Step 4: Assign a host
+        resp = api_client.post(
+            f"/api/v1/shortlets/{shortlet_id}/assign-host/",
+            {"host_id": host.id, "role": "HOST"},
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_201_CREATED
+
+        # Step 5: Publish
         resp = api_client.post(f"/api/v1/shortlets/{shortlet_id}/publish/")
         assert resp.status_code == status.HTTP_200_OK
         assert resp.data["data"]["status"] == "PENDING"

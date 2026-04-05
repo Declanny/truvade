@@ -39,6 +39,8 @@ def publish_shortlet(*, shortlet):
         errors.append("At least 1 amenity is required.")
     if shortlet.images.count() < 5:
         errors.append("At least 5 images are required.")
+    if not shortlet.host_assignments.exists():
+        errors.append("At least 1 host must be assigned.")
 
     if errors:
         raise ValidationError(errors)

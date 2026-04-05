@@ -121,7 +121,7 @@ class TestPublishShortlet:
         with pytest.raises(ValidationError) as exc_info:
             publish_shortlet(shortlet=shortlet)
         messages = exc_info.value.messages
-        assert len(messages) == 6
+        assert len(messages) == 7
 
     def test_raises_if_owner_not_verified(self, owner):
         shortlet = Shortlet.objects.create(

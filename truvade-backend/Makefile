@@ -1,10 +1,10 @@
 .PHONY: build up down test
 
 build:
-	docker compose build
+	docker compose up --build
 
 up:
-	docker compose up -d
+	docker compose up
 
 down:
 	docker compose down

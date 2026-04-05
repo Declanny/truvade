@@ -84,8 +84,8 @@ def verified_owner(owner):
 
 
 @pytest.fixture
-def publishable_shortlet(verified_owner):
-    """A shortlet with all required fields to be published (including 5+ images)."""
+def publishable_shortlet(verified_owner, host):
+    """A shortlet with all required fields to be published (including 5+ images and a host)."""
     shortlet = Shortlet.objects.create(
         owner=verified_owner,
         title="Ready Apartment",
@@ -103,6 +103,9 @@ def publishable_shortlet(verified_owner):
         ShortletImage.objects.create(
             shortlet=shortlet, image=f"shortlets/img{i}.jpg", order=i
         )
+    ShortletHostAssignment.objects.create(
+        shortlet=shortlet, host=host, role="HOST", assigned_by=verified_owner
+    )
     return shortlet
 
 
