@@ -50,8 +50,8 @@ jobs:
           username: ${{ secrets.DROPLET_USER }}
           key: ${{ secrets.DROPLET_SSH_KEY }}
           source: "truvade-backend/docker-compose.prod.yml"
-          target: /app
-          strip_components: 0
+          target: ~/truvade-backend
+          strip_components: 1
 
       - name: Pull image and restart services
         uses: appleboy/ssh-action@v1.2.0
@@ -62,7 +62,7 @@ jobs:
           envs: CR_PAT
           script: |
             echo $CR_PAT | docker login ghcr.io -u declanny --password-stdin
-            cd /app/truvade-backend
+            cd ~/truvade-backend
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml down
             docker compose -f docker-compose.prod.yml up -d
