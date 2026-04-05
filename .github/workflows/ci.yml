@@ -3,11 +3,16 @@ name: CI
 on:
   pull_request:
     branches: [main]
+    paths:
+      - "truvade-backend/**"
 
 jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: truvade-backend
     steps:
       - uses: actions/checkout@v4
 
@@ -32,6 +37,9 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     needs: lint
+    defaults:
+      run:
+        working-directory: truvade-backend
     steps:
       - uses: actions/checkout@v4
 
