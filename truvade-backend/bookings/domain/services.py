@@ -8,6 +8,8 @@ from django.utils import timezone
 from bookings.models import Booking
 from shortlet.models import Shortlet, ShortletHostAssignment
 
+HUNDRED = Decimal("100")
+
 PLATFORM_FEE_RATE = Decimal("0.08")
 
 
@@ -67,6 +69,18 @@ def create_booking(
     platform_fee = (subtotal * PLATFORM_FEE_RATE).quantize(Decimal("0.01"))
     total_price = subtotal + platform_fee
 
+    # Snapshot host commission from the HOST assignment
+    host_assignment = ShortletHostAssignment.objects.filter(
+        shortlet=shortlet, role="HOST"
+    ).first()
+    host_commission_percentage = (
+        host_assignment.commission_percentage if host_assignment else Decimal("0.00")
+    )
+    host_payout_amount = (subtotal * host_commission_percentage / HUNDRED).quantize(
+        Decimal("0.01")
+    )
+    owner_payout_amount = subtotal - host_payout_amount
+
     return Booking.objects.create(
         guest=guest,
         shortlet=shortlet,
@@ -81,6 +95,9 @@ def create_booking(
         total_price=total_price,
         currency=shortlet.currency,
         guest_note=guest_note,
+        host_commission_percentage=host_commission_percentage,
+        host_payout_amount=host_payout_amount,
+        owner_payout_amount=owner_payout_amount,
     )
 
 

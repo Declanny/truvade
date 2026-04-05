@@ -60,6 +60,51 @@ class TestCreateBooking:
         assert booking.total_price == expected_total
         assert booking.currency == "NGN"
 
+    def test_host_commission_snapshot(self, guest, active_shortlet):
+        """Host assignment has commission_percentage=0 by default in fixture."""
+        check_in = datetime.date.today() + datetime.timedelta(days=10)
+        check_out = check_in + datetime.timedelta(days=4)
+
+        booking = create_booking(
+            guest=guest,
+            shortlet=active_shortlet,
+            check_in=check_in,
+            check_out=check_out,
+            number_of_guests=2,
+        )
+
+        assert booking.host_commission_percentage == Decimal("0.00")
+        assert booking.host_payout_amount == Decimal("0.00")
+        assert booking.owner_payout_amount == booking.subtotal
+
+    def test_host_commission_with_percentage(self, guest, active_shortlet):
+        """Update host assignment to 10% commission and verify snapshot."""
+        from shortlet.models import ShortletHostAssignment
+
+        assignment = ShortletHostAssignment.objects.get(
+            shortlet=active_shortlet, role="HOST"
+        )
+        assignment.commission_percentage = Decimal("10.00")
+        assignment.save()
+
+        check_in = datetime.date.today() + datetime.timedelta(days=10)
+        check_out = check_in + datetime.timedelta(days=4)
+
+        booking = create_booking(
+            guest=guest,
+            shortlet=active_shortlet,
+            check_in=check_in,
+            check_out=check_out,
+            number_of_guests=2,
+        )
+
+        expected_host = (booking.subtotal * Decimal("10") / Decimal("100")).quantize(
+            Decimal("0.01")
+        )
+        assert booking.host_commission_percentage == Decimal("10.00")
+        assert booking.host_payout_amount == expected_host
+        assert booking.owner_payout_amount == booking.subtotal - expected_host
+
     def test_guest_note_stored(self, guest, active_shortlet):
         check_in = datetime.date.today() + datetime.timedelta(days=10)
         check_out = check_in + datetime.timedelta(days=3)

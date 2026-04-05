@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.conf import settings
 from django.db import models
 from django.db.models import F, Q
@@ -33,6 +35,17 @@ class Booking(models.Model):
     platform_fee = models.DecimalField(max_digits=12, decimal_places=2)
     total_price = models.DecimalField(max_digits=14, decimal_places=2)
     currency = models.CharField(max_length=5)
+
+    # Payout snapshot
+    host_commission_percentage = models.DecimalField(
+        max_digits=5, decimal_places=2, default=Decimal("0.00")
+    )
+    host_payout_amount = models.DecimalField(
+        max_digits=14, decimal_places=2, default=Decimal("0.00")
+    )
+    owner_payout_amount = models.DecimalField(
+        max_digits=14, decimal_places=2, default=Decimal("0.00")
+    )
 
     status = models.CharField(
         max_length=10,

@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "accounts",
     "shortlet",
     "bookings",
+    "payments",
 ]
 
 AUTH_USER_MODEL = "accounts.User"
@@ -192,6 +193,13 @@ OTP_EXPIRY_MINUTES = 10
 # Invitations
 INVITATION_EXPIRY_DAYS = 7
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+
+# Paystack
+PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY", "")
+PAYSTACK_PUBLIC_KEY = os.environ.get("PAYSTACK_PUBLIC_KEY", "")
+PAYSTACK_CALLBACK_URL = os.environ.get(
+    "PAYSTACK_CALLBACK_URL", f"{FRONTEND_URL}/bookings/payment/callback"
+)
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Truvade API",

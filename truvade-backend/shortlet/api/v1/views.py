@@ -195,6 +195,9 @@ class ShortletViewSet(viewsets.ModelViewSet):
             host=host,
             role=serializer.validated_data["role"],
             assigned_by=request.user,
+            commission_percentage=serializer.validated_data.get(
+                "commission_percentage", 0
+            ),
         )
         return success_response(
             "Host assigned successfully.",

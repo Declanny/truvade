@@ -23,6 +23,7 @@ class ShortletHostAssignmentSerializer(serializers.ModelSerializer):
             "host_name",
             "host_email",
             "role",
+            "commission_percentage",
             "can_edit",
             "can_upload_images",
             "assigned_by",
@@ -86,6 +87,9 @@ class UploadImagesSerializer(serializers.Serializer):
 class AssignHostSerializer(serializers.Serializer):
     host_id = serializers.IntegerField()
     role = serializers.ChoiceField(choices=["HOST", "COHOST"])
+    commission_percentage = serializers.DecimalField(
+        max_digits=5, decimal_places=2, required=False, default=0
+    )
 
 
 class UpdateAssignmentPermissionsSerializer(serializers.Serializer):

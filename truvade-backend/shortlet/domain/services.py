@@ -76,7 +76,9 @@ def delete_shortlet_image(*, shortlet, image_id):
 
 
 @transaction.atomic
-def assign_host_to_shortlet(*, shortlet, host, role, assigned_by):
+def assign_host_to_shortlet(
+    *, shortlet, host, role, assigned_by, commission_percentage=0
+):
     """Assign a verified host to a shortlet as HOST or COHOST."""
     if host.role != "HOST":
         raise ValidationError("Only users with the HOST role can be assigned.")
@@ -96,7 +98,11 @@ def assign_host_to_shortlet(*, shortlet, host, role, assigned_by):
         raise ValidationError(f"A {role} is already assigned to this shortlet.")
 
     return ShortletHostAssignment.objects.create(
-        shortlet=shortlet, host=host, role=role, assigned_by=assigned_by
+        shortlet=shortlet,
+        host=host,
+        role=role,
+        assigned_by=assigned_by,
+        commission_percentage=commission_percentage,
     )
 
 
