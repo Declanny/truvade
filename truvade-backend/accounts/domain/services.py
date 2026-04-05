@@ -4,7 +4,7 @@ import random
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.mail import send_mail
+from accounts.emails import send_html_email
 from django.db import transaction
 from django.utils import timezone
 
@@ -52,11 +52,12 @@ def send_otp(*, user):
     code = f"{random.randint(0, 999999):06d}"
     OTP.objects.create(user=user, code=code)
 
-    send_mail(
+    send_html_email(
         subject="Your Truvade verification code",
-        message=f"Your verification code is: {code}\n\nThis code expires in {settings.OTP_EXPIRY_MINUTES} minutes.",
-        from_email=settings.DEFAULT_FROM_EMAIL,
+        template="emails/otp.html",
+        context={"code": code, "expiry_minutes": settings.OTP_EXPIRY_MINUTES},
         recipient_list=[user.email],
+        plain_text=f"Your verification code is: {code}\n\nThis code expires in {settings.OTP_EXPIRY_MINUTES} minutes.",
     )
     return code
 
@@ -152,7 +153,8 @@ def _send_invitation_email(*, invitation, is_registered):
 
     if is_registered:
         link = f"{frontend_url}/invitations/{invitation.token}/accept"
-        message = (
+        template = "emails/invitation_existing.html"
+        plain_text = (
             f"Hi,\n\n"
             f"{owner_display} has invited you to be a host on Truvade.\n\n"
             f"Click the link below to accept the invitation:\n"
@@ -161,7 +163,8 @@ def _send_invitation_email(*, invitation, is_registered):
         )
     else:
         link = f"{frontend_url}/invitations/{invitation.token}/signup"
-        message = (
+        template = "emails/invitation_new.html"
+        plain_text = (
             f"Hi,\n\n"
             f"{owner_display} has invited you to join Truvade as a host.\n\n"
             f"Click the link below to create your account and accept the invitation:\n"
@@ -169,11 +172,16 @@ def _send_invitation_email(*, invitation, is_registered):
             f"This invitation expires in {settings.INVITATION_EXPIRY_DAYS} days."
         )
 
-    send_mail(
+    send_html_email(
         subject="You've been invited to Truvade",
-        message=message,
-        from_email=settings.DEFAULT_FROM_EMAIL,
+        template=template,
+        context={
+            "owner_display": owner_display,
+            "link": link,
+            "expiry_days": settings.INVITATION_EXPIRY_DAYS,
+        },
         recipient_list=[invitation.email],
+        plain_text=plain_text,
     )
 
 
