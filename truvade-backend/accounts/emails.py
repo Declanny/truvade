@@ -1,6 +1,10 @@
+import logging
+
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
+
+logger = logging.getLogger(__name__)
 
 
 def send_html_email(*, subject, template, context, recipient_list, plain_text):
@@ -14,4 +18,9 @@ def send_html_email(*, subject, template, context, recipient_list, plain_text):
         to=recipient_list,
     )
     msg.attach_alternative(html_content, "text/html")
-    msg.send()
+    try:
+        msg.send()
+        logger.info("Email sent to %s: %s", recipient_list, subject)
+    except Exception:
+        logger.exception("Failed to send email to %s: %s", recipient_list, subject)
+        raise
