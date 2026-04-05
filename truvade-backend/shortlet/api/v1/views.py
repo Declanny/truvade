@@ -27,7 +27,10 @@ from shortlet.domain.services import (
 from shortlet.models import Shortlet, ShortletImage
 
 from .permissions import IsOwner
+from shortlet.models import Amenity
+
 from .serializers import (
+    AmenitySerializer,
     AssignHostSerializer,
     AvailableHostSerializer,
     ShortletCreateSerializer,
@@ -287,4 +290,23 @@ class HostShortletListView(APIView):
         return success_response(
             "Assigned shortlets retrieved.",
             ShortletSerializer(shortlets, many=True).data,
+        )
+
+
+@extend_schema(
+    tags=["Amenities"],
+    summary="List all amenities",
+    responses=AmenitySerializer(many=True),
+)
+class AmenityListView(APIView):
+    """Public endpoint returning all available amenities."""
+
+    permission_classes = []
+    authentication_classes = []
+
+    def get(self, request):
+        amenities = Amenity.objects.all()
+        return success_response(
+            "Amenities retrieved successfully.",
+            AmenitySerializer(amenities, many=True).data,
         )

@@ -12,7 +12,9 @@ class TestShortletSerializer:
         assert data["title"] == "Draft Apartment"
         assert data["status"] == "DRAFT"
         assert data["city"] == "Victoria Island"
-        assert data["amenities"] == ["WiFi", "Pool"]
+        assert len(data["amenities"]) == 2
+        amenity_names = {a["name"] for a in data["amenities"]}
+        assert amenity_names == {"WiFi", "Pool"}
         assert "images" in data
         assert "owner" in data
         assert "id" in data

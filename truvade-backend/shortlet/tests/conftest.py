@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
 from accounts.models import IdentityVerification, OwnerHostMembership
-from shortlet.models import Shortlet, ShortletHostAssignment, ShortletImage
+from shortlet.models import Amenity, Shortlet, ShortletHostAssignment, ShortletImage
 
 User = get_user_model()
 
@@ -35,6 +35,15 @@ def guest(db):
 
 
 @pytest.fixture
+def amenities(db):
+    """Pre-created amenities for tests."""
+    wifi = Amenity.objects.create(name="WiFi")
+    pool = Amenity.objects.create(name="Pool")
+    ac = Amenity.objects.create(name="Air Conditioning")
+    return {"wifi": wifi, "pool": pool, "ac": ac}
+
+
+@pytest.fixture
 def shortlet_data(owner):
     return {
         "owner": owner,
@@ -49,13 +58,12 @@ def shortlet_data(owner):
         "bathrooms": 2,
         "max_guests": 6,
         "base_price": 85000,
-        "amenities": ["WiFi", "Air Conditioning", "Pool"],
     }
 
 
 @pytest.fixture
-def draft_shortlet(owner):
-    return Shortlet.objects.create(
+def draft_shortlet(owner, amenities):
+    shortlet = Shortlet.objects.create(
         owner=owner,
         title="Draft Apartment",
         shortlet_type="apartment",
@@ -65,8 +73,9 @@ def draft_shortlet(owner):
         bathrooms=2,
         max_guests=6,
         base_price=85000,
-        amenities=["WiFi", "Pool"],
     )
+    shortlet.amenities.set([amenities["wifi"], amenities["pool"]])
+    return shortlet
 
 
 @pytest.fixture
@@ -84,7 +93,7 @@ def verified_owner(owner):
 
 
 @pytest.fixture
-def publishable_shortlet(verified_owner, host):
+def publishable_shortlet(verified_owner, host, amenities):
     """A shortlet with all required fields to be published (including 5+ images and a host)."""
     shortlet = Shortlet.objects.create(
         owner=verified_owner,
@@ -97,8 +106,8 @@ def publishable_shortlet(verified_owner, host):
         bathrooms=1,
         max_guests=4,
         base_price=50000,
-        amenities=["WiFi"],
     )
+    shortlet.amenities.set([amenities["wifi"]])
     for i in range(5):
         ShortletImage.objects.create(
             shortlet=shortlet, image=f"shortlets/img{i}.jpg", order=i

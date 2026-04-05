@@ -7,7 +7,7 @@ from rest_framework.test import APIClient
 
 from accounts.models import IdentityVerification, OwnerHostMembership
 from bookings.models import Booking
-from shortlet.models import Shortlet, ShortletHostAssignment, ShortletImage
+from shortlet.models import Amenity, Shortlet, ShortletHostAssignment, ShortletImage
 
 User = get_user_model()
 
@@ -92,9 +92,11 @@ def active_shortlet(verified_owner, host):
         base_price=Decimal("50000.00"),
         cleaning_fee=Decimal("5000.00"),
         currency="NGN",
-        amenities=["WiFi", "Pool"],
         status=Shortlet.Status.ACTIVE,
     )
+    wifi, _ = Amenity.objects.get_or_create(name="WiFi")
+    pool, _ = Amenity.objects.get_or_create(name="Pool")
+    shortlet.amenities.set([wifi, pool])
     for i in range(5):
         ShortletImage.objects.create(
             shortlet=shortlet, image=f"shortlets/img{i}.jpg", order=i

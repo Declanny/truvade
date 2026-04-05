@@ -49,10 +49,13 @@ class TestShortletModel:
         assert shortlet.created_at is not None
         assert shortlet.updated_at is not None
 
-    def test_amenities_stored_as_list(self, shortlet_data):
+    def test_amenities_m2m(self, shortlet_data, amenities):
         shortlet = Shortlet.objects.create(**shortlet_data)
+        shortlet.amenities.set([amenities["wifi"], amenities["pool"]])
         shortlet.refresh_from_db()
-        assert shortlet.amenities == ["WiFi", "Air Conditioning", "Pool"]
+        assert shortlet.amenities.count() == 2
+        names = set(shortlet.amenities.values_list("name", flat=True))
+        assert names == {"WiFi", "Pool"}
 
     def test_shortlet_type_choices(self, shortlet_data):
         for stype in ["apartment", "house", "studio", "villa"]:

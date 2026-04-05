@@ -115,6 +115,10 @@ class TestShortletStepByStepFlow:
         assert resp.data["data"]["status"] == "DRAFT"
 
         # Step 2: Fill in details via PATCH
+        from shortlet.models import Amenity
+
+        wifi = Amenity.objects.create(name="WiFi Flow")
+        pool = Amenity.objects.create(name="Pool Flow")
         api_client.patch(
             f"/api/v1/shortlets/{shortlet_id}/",
             {
@@ -122,7 +126,7 @@ class TestShortletStepByStepFlow:
                 "description": "A stunning villa by the ocean",
                 "city": "Lekki",
                 "base_price": 150000,
-                "amenities": ["WiFi", "Pool"],
+                "amenity_ids": [wifi.pk, pool.pk],
             },
             format="json",
         )
@@ -194,8 +198,7 @@ class TestShortletPublish:
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_publish_without_amenities(self, api_client, owner, publishable_shortlet):
-        publishable_shortlet.amenities = []
-        publishable_shortlet.save()
+        publishable_shortlet.amenities.clear()
         api_client.force_authenticate(user=owner)
         resp = api_client.post(f"/api/v1/shortlets/{publishable_shortlet.id}/publish/")
         assert resp.status_code == status.HTTP_400_BAD_REQUEST

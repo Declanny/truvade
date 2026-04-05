@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from accounts.models import User
-from shortlet.models import Shortlet, ShortletHostAssignment, ShortletImage
+from shortlet.models import Amenity, Shortlet, ShortletHostAssignment, ShortletImage
 
 
 class ShortletImageSerializer(serializers.ModelSerializer):
@@ -32,9 +32,20 @@ class ShortletHostAssignmentSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class AmenitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Amenity
+        fields = ["id", "name", "icon"]
+        read_only_fields = fields
+
+
 class ShortletSerializer(serializers.ModelSerializer):
     images = ShortletImageSerializer(many=True, read_only=True)
     host_assignments = ShortletHostAssignmentSerializer(many=True, read_only=True)
+    amenities = AmenitySerializer(many=True, read_only=True)
+    amenity_ids = serializers.ListField(
+        child=serializers.IntegerField(), required=False, write_only=True
+    )
 
     class Meta:
         model = Shortlet
@@ -58,6 +69,7 @@ class ShortletSerializer(serializers.ModelSerializer):
             "cleaning_fee",
             "currency",
             "amenities",
+            "amenity_ids",
             "status",
             "featured",
             "verified",
@@ -68,6 +80,14 @@ class ShortletSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "owner", "created_at", "updated_at"]
+
+    def update(self, instance, validated_data):
+        amenity_ids = validated_data.pop("amenity_ids", None)
+        instance = super().update(instance, validated_data)
+        if amenity_ids is not None:
+            amenities = Amenity.objects.filter(id__in=amenity_ids)
+            instance.amenities.set(amenities)
+        return instance
 
 
 class ShortletCreateSerializer(serializers.ModelSerializer):

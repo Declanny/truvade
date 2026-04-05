@@ -5,6 +5,19 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
+class Amenity(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    icon = models.CharField(max_length=50, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = "amenities"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
 class Shortlet(models.Model):
     class ShortletType(models.TextChoices):
         APARTMENT = "apartment", "Apartment"
@@ -44,7 +57,7 @@ class Shortlet(models.Model):
     )
     cleaning_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     currency = models.CharField(max_length=5, default="NGN")
-    amenities = models.JSONField(default=list, blank=True)
+    amenities = models.ManyToManyField("Amenity", blank=True, related_name="shortlets")
     status = models.CharField(
         max_length=10, choices=Status.choices, default=Status.DRAFT
     )

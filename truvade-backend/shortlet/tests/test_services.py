@@ -92,12 +92,11 @@ class TestPublishShortlet:
             publish_shortlet(shortlet=publishable_shortlet)
 
     def test_raises_without_amenities(self, publishable_shortlet):
-        publishable_shortlet.amenities = []
-        publishable_shortlet.save()
+        publishable_shortlet.amenities.clear()
         with pytest.raises(ValidationError, match="amenity"):
             publish_shortlet(shortlet=publishable_shortlet)
 
-    def test_raises_without_enough_images(self, verified_owner):
+    def test_raises_without_enough_images(self, verified_owner, amenities):
         shortlet = Shortlet.objects.create(
             owner=verified_owner,
             title="Draft Apartment",
@@ -109,8 +108,8 @@ class TestPublishShortlet:
             bathrooms=2,
             max_guests=6,
             base_price=85000,
-            amenities=["WiFi", "Pool"],
         )
+        shortlet.amenities.set([amenities["wifi"], amenities["pool"]])
         with pytest.raises(ValidationError, match="images"):
             publish_shortlet(shortlet=shortlet)
 
@@ -123,7 +122,7 @@ class TestPublishShortlet:
         messages = exc_info.value.messages
         assert len(messages) == 7
 
-    def test_raises_if_owner_not_verified(self, owner):
+    def test_raises_if_owner_not_verified(self, owner, amenities):
         shortlet = Shortlet.objects.create(
             owner=owner,
             title="Test",
@@ -131,8 +130,8 @@ class TestPublishShortlet:
             shortlet_type="apartment",
             city="Lagos",
             base_price=50000,
-            amenities=["WiFi"],
         )
+        shortlet.amenities.set([amenities["wifi"]])
         for i in range(5):
             ShortletImage.objects.create(
                 shortlet=shortlet, image=f"shortlets/img{i}.jpg", order=i

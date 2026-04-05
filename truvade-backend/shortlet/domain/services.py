@@ -35,7 +35,7 @@ def publish_shortlet(*, shortlet):
         errors.append("Base price is required.")
     if not shortlet.description:
         errors.append("Description is required.")
-    if not shortlet.amenities:
+    if not shortlet.amenities.exists():
         errors.append("At least 1 amenity is required.")
     if shortlet.images.count() < 5:
         errors.append("At least 5 images are required.")
