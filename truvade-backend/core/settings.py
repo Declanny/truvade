@@ -75,9 +75,9 @@ MIDDLEWARE = [
 # CORS
 CORS_ALLOWED_ORIGINS = [
     origin.strip()
-    for origin in os.environ.get(
-        "CORS_ALLOWED_ORIGINS", "http://localhost:3000"
-    ).split(",")
+    for origin in os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(
+        ","
+    )
     if origin.strip()
 ]
 CORS_ALLOW_CREDENTIALS = True
