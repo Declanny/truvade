@@ -243,4 +243,5 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "Truvade API",
     "DESCRIPTION": "API for Truvade — verified shortlet booking platform for Africa",
     "VERSION": "1.0.0",
+    "COMPONENT_SPLIT_REQUEST": True,
 }
