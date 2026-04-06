@@ -134,3 +134,77 @@ class VerificationSerializer(serializers.ModelSerializer):
         if obj.reviewed_by:
             return obj.reviewed_by.email
         return None
+
+
+# --- Profile serializers ---
+
+
+class OwnProfileSerializer(serializers.ModelSerializer):
+    """Full profile for the authenticated user (includes private fields)."""
+
+    is_verified = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "email",
+            "name",
+            "preferred_name",
+            "phone",
+            "avatar",
+            "role",
+            "bio",
+            "work",
+            "location",
+            "languages",
+            "emergency_contact",
+            "address",
+            "is_verified",
+            "date_joined",
+        ]
+        read_only_fields = fields
+
+
+class PublicProfileSerializer(serializers.ModelSerializer):
+    """Public profile visible to anyone (no private fields)."""
+
+    is_verified = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "name",
+            "avatar",
+            "role",
+            "bio",
+            "work",
+            "location",
+            "languages",
+            "is_verified",
+            "date_joined",
+        ]
+        read_only_fields = fields
+
+
+class UpdateProfileSerializer(serializers.Serializer):
+    """Write serializer for profile updates. All fields optional."""
+
+    name = serializers.CharField(max_length=150, required=False)
+    bio = serializers.CharField(required=False, allow_blank=True)
+    work = serializers.CharField(max_length=150, required=False, allow_blank=True)
+    location = serializers.CharField(max_length=150, required=False, allow_blank=True)
+    languages = serializers.ListField(child=serializers.CharField(), required=False)
+    emergency_contact = serializers.CharField(
+        max_length=255, required=False, allow_blank=True
+    )
+    preferred_name = serializers.CharField(
+        max_length=150, required=False, allow_blank=True
+    )
+    address = serializers.CharField(required=False, allow_blank=True)
+    phone = serializers.CharField(max_length=20, required=False, allow_blank=True)
+
+
+class AvatarUploadSerializer(serializers.Serializer):
+    avatar = serializers.ImageField()

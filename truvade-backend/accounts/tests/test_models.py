@@ -122,6 +122,55 @@ class TestUserModel:
         )
         assert owner.is_verified is False
 
+    def test_profile_fields_default_to_blank(self):
+        user = User.objects.create_user(
+            email="blank@example.com", password="testpass123"
+        )
+        assert user.bio == ""
+        assert user.work == ""
+        assert user.location == ""
+        assert user.languages == []
+        assert user.emergency_contact == ""
+        assert user.preferred_name == ""
+        assert user.address == ""
+
+    def test_profile_fields_store_values(self):
+        user = User.objects.create_user(
+            email="profile@example.com",
+            password="testpass123",
+            bio="A product designer from Lagos",
+            work="Product Designer at TechCo",
+            location="Lagos, Nigeria",
+            emergency_contact="Kemi Nwosu — +2348023456789",
+            preferred_name="Ada",
+            address="12 Victoria Island, Lagos",
+        )
+        user.refresh_from_db()
+        assert user.bio == "A product designer from Lagos"
+        assert user.work == "Product Designer at TechCo"
+        assert user.location == "Lagos, Nigeria"
+        assert user.emergency_contact == "Kemi Nwosu — +2348023456789"
+        assert user.preferred_name == "Ada"
+        assert user.address == "12 Victoria Island, Lagos"
+
+    def test_languages_stores_list(self):
+        user = User.objects.create_user(
+            email="lang@example.com",
+            password="testpass123",
+            languages=["English", "Yoruba", "Pidgin"],
+        )
+        user.refresh_from_db()
+        assert user.languages == ["English", "Yoruba", "Pidgin"]
+
+    def test_avatar_accepts_image_path(self):
+        user = User.objects.create_user(
+            email="avatar@example.com",
+            password="testpass123",
+            avatar="avatars/test.jpg",
+        )
+        user.refresh_from_db()
+        assert user.avatar.name == "avatars/test.jpg"
+
 
 @pytest.mark.django_db
 class TestInvitationModel:

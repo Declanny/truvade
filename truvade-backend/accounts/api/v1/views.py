@@ -12,6 +12,8 @@ from accounts.domain.selectors import (
     get_invitations_for_email,
     get_invitations_sent_by_owner,
     get_owners_for_host,
+    get_profile_completion,
+    get_public_profile,
     get_user_by_email,
     get_verifications_for_user,
 )
@@ -25,6 +27,8 @@ from accounts.domain.services import (
     revoke_invitation,
     send_otp,
     submit_verification,
+    update_profile,
+    upload_avatar,
     verify_otp,
 )
 from core.utils.responses import success_response
@@ -35,14 +39,18 @@ from .permissions import (
     IsOwnerRole,
 )
 from .serializers import (
+    AvatarUploadSerializer,
     CreateInvitationSerializer,
     InvitationSerializer,
     InvitedSignupSerializer,
     LoginSerializer,
     MembershipSerializer,
+    OwnProfileSerializer,
+    PublicProfileSerializer,
     ResendOTPSerializer,
     SignupSerializer,
     SubmitVerificationSerializer,
+    UpdateProfileSerializer,
     UserSerializer,
     VerificationSerializer,
     VerifyOTPSerializer,
@@ -361,4 +369,90 @@ class MyVerificationsView(APIView):
         return success_response(
             "Verifications retrieved successfully.",
             VerificationSerializer(verifications, many=True).data,
+        )
+
+
+# --- Profile views ---
+
+
+@extend_schema(
+    tags=["Profile"],
+    responses=OwnProfileSerializer,
+    summary="Get or update own profile",
+)
+class MyProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return success_response(
+            "Profile retrieved successfully.",
+            OwnProfileSerializer(request.user).data,
+        )
+
+    @extend_schema(request=UpdateProfileSerializer)
+    def patch(self, request):
+        serializer = UpdateProfileSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = update_profile(user=request.user, **serializer.validated_data)
+        return success_response(
+            "Profile updated successfully.",
+            OwnProfileSerializer(user).data,
+        )
+
+
+@extend_schema(
+    tags=["Profile"],
+    request=AvatarUploadSerializer,
+    responses=OwnProfileSerializer,
+    summary="Upload avatar",
+)
+class AvatarUploadView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = AvatarUploadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = upload_avatar(
+            user=request.user, avatar=serializer.validated_data["avatar"]
+        )
+        return success_response(
+            "Avatar uploaded successfully.",
+            OwnProfileSerializer(user).data,
+        )
+
+
+@extend_schema(
+    tags=["Profile"],
+    responses=PublicProfileSerializer,
+    summary="Get public profile",
+)
+class PublicProfileView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, user_id):
+        user = get_public_profile(user_id=user_id)
+        if user is None:
+            return success_response(
+                "User not found.",
+                None,
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+        return success_response(
+            "Profile retrieved successfully.",
+            PublicProfileSerializer(user).data,
+        )
+
+
+@extend_schema(
+    tags=["Profile"],
+    summary="Get profile completion",
+)
+class ProfileCompletionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        completion = get_profile_completion(user=request.user)
+        return success_response(
+            "Profile completion retrieved successfully.",
+            completion,
         )

@@ -82,3 +82,20 @@ def expired_invitation(owner):
 @pytest.fixture
 def membership(owner, host):
     return OwnerHostMembership.objects.create(owner=owner, host=host)
+
+
+@pytest.fixture
+def user_with_profile(db):
+    return User.objects.create_user(
+        email="profile@example.com",
+        role="GUEST",
+        name="Ada Nwosu",
+        bio="Product designer from Lagos",
+        work="Product Designer at TechCo",
+        location="Lagos, Nigeria",
+        languages=["English", "Yoruba"],
+        phone="+2348012345678",
+        emergency_contact="Kemi Nwosu — +2348023456789",
+        preferred_name="Ada",
+        address="12 Victoria Island, Lagos",
+    )

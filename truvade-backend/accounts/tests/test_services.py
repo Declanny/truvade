@@ -14,6 +14,8 @@ from accounts.domain.services import (
     revoke_invitation,
     send_otp,
     submit_verification,
+    update_profile,
+    upload_avatar,
     verify_otp,
 )
 from accounts.models import (
@@ -537,3 +539,88 @@ class TestReviewVerification:
             review_verification(
                 verification_id=v.id, admin=admin_user, status="REJECTED"
             )
+
+
+@pytest.mark.django_db
+class TestUpdateProfile:
+    def test_updates_basic_fields(self, guest):
+        user = update_profile(
+            user=guest, name="New Name", bio="A bio", work="Designer", location="Lagos"
+        )
+        assert user.name == "New Name"
+        assert user.bio == "A bio"
+        assert user.work == "Designer"
+        assert user.location == "Lagos"
+
+    def test_updates_private_fields(self, guest):
+        user = update_profile(
+            user=guest,
+            emergency_contact="Kemi — +234802",
+            preferred_name="Ada",
+            address="12 Victoria Island",
+        )
+        assert user.emergency_contact == "Kemi — +234802"
+        assert user.preferred_name == "Ada"
+        assert user.address == "12 Victoria Island"
+
+    def test_updates_languages_list(self, guest):
+        user = update_profile(user=guest, languages=["English", "Yoruba"])
+        assert user.languages == ["English", "Yoruba"]
+
+    def test_partial_update_preserves_other_fields(self, guest):
+        update_profile(user=guest, bio="Original bio")
+        update_profile(user=guest, work="Designer")
+        guest.refresh_from_db()
+        assert guest.bio == "Original bio"
+        assert guest.work == "Designer"
+
+    def test_rejects_non_list_languages(self, guest):
+        with pytest.raises(ValidationError, match="must be a list"):
+            update_profile(user=guest, languages="English")
+
+    def test_rejects_non_string_language_items(self, guest):
+        with pytest.raises(ValidationError, match="must be a string"):
+            update_profile(user=guest, languages=["English", 123])
+
+    def test_ignores_non_updatable_fields(self, guest):
+        original_email = guest.email
+        original_role = guest.role
+        update_profile(user=guest, email="hacker@evil.com", role="ADMIN")
+        guest.refresh_from_db()
+        assert guest.email == original_email
+        assert guest.role == original_role
+
+
+@pytest.mark.django_db
+class TestUploadAvatar:
+    def test_upload_saves_image(self, guest):
+        from io import BytesIO
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from PIL import Image
+
+        buf = BytesIO()
+        Image.new("RGB", (10, 10), "red").save(buf, format="JPEG")
+        buf.seek(0)
+        image = SimpleUploadedFile("avatar.jpg", buf.read(), content_type="image/jpeg")
+
+        user = upload_avatar(user=guest, avatar=image)
+        assert user.avatar
+        assert "avatars/" in user.avatar.name
+
+    def test_upload_replaces_existing(self, guest):
+        from io import BytesIO
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from PIL import Image
+
+        def make_image(name):
+            buf = BytesIO()
+            Image.new("RGB", (10, 10), "red").save(buf, format="JPEG")
+            buf.seek(0)
+            return SimpleUploadedFile(name, buf.read(), content_type="image/jpeg")
+
+        upload_avatar(user=guest, avatar=make_image("first.jpg"))
+        upload_avatar(user=guest, avatar=make_image("second.jpg"))
+        guest.refresh_from_db()
+        assert "second" in guest.avatar.name

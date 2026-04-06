@@ -417,3 +417,160 @@ class TestMyVerificationsView:
         resp = api_client.get("/api/v1/verifications/me/")
         assert resp.status_code == status.HTTP_200_OK
         assert len(resp.data["data"]) == 1
+
+
+# --- Profile views ---
+
+
+def _make_image(name="test.jpg"):
+    buf = io.BytesIO()
+    Image.new("RGB", (10, 10), "red").save(buf, format="JPEG")
+    buf.seek(0)
+    return SimpleUploadedFile(name, buf.read(), content_type="image/jpeg")
+
+
+@pytest.mark.django_db
+class TestMyProfileView:
+    def test_get_own_profile(self, api_client, guest):
+        api_client.force_authenticate(user=guest)
+        resp = api_client.get("/api/v1/profile/me/")
+        assert resp.status_code == status.HTTP_200_OK
+        data = resp.data["data"]
+        assert data["email"] == guest.email
+        assert data["name"] == guest.name
+        assert "bio" in data
+        assert "emergency_contact" in data
+        assert "preferred_name" in data
+        assert "address" in data
+
+    def test_includes_is_verified(self, api_client, guest):
+        api_client.force_authenticate(user=guest)
+        resp = api_client.get("/api/v1/profile/me/")
+        assert resp.status_code == status.HTTP_200_OK
+        assert "is_verified" in resp.data["data"]
+
+    def test_401_unauthenticated(self, api_client):
+        resp = api_client.get("/api/v1/profile/me/")
+        assert resp.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+class TestUpdateProfileView:
+    def test_patch_updates_fields(self, api_client, guest):
+        api_client.force_authenticate(user=guest)
+        resp = api_client.patch(
+            "/api/v1/profile/me/",
+            {"name": "New Name", "bio": "Hello world"},
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        data = resp.data["data"]
+        assert data["name"] == "New Name"
+        assert data["bio"] == "Hello world"
+
+    def test_partial_update_preserves_fields(self, api_client, guest):
+        api_client.force_authenticate(user=guest)
+        api_client.patch("/api/v1/profile/me/", {"bio": "Original bio"}, format="json")
+        resp = api_client.patch(
+            "/api/v1/profile/me/", {"work": "Designer"}, format="json"
+        )
+        data = resp.data["data"]
+        assert data["bio"] == "Original bio"
+        assert data["work"] == "Designer"
+
+    def test_cannot_update_email(self, api_client, guest):
+        original_email = guest.email
+        api_client.force_authenticate(user=guest)
+        api_client.patch(
+            "/api/v1/profile/me/", {"email": "hacker@evil.com"}, format="json"
+        )
+        guest.refresh_from_db()
+        assert guest.email == original_email
+
+    def test_cannot_update_role(self, api_client, guest):
+        api_client.force_authenticate(user=guest)
+        api_client.patch("/api/v1/profile/me/", {"role": "ADMIN"}, format="json")
+        guest.refresh_from_db()
+        assert guest.role == "GUEST"
+
+    def test_401_unauthenticated(self, api_client):
+        resp = api_client.patch("/api/v1/profile/me/", {"name": "Test"}, format="json")
+        assert resp.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+class TestAvatarUploadView:
+    def test_upload_avatar(self, api_client, guest):
+        api_client.force_authenticate(user=guest)
+        resp = api_client.post(
+            "/api/v1/profile/me/avatar/",
+            {"avatar": _make_image()},
+            format="multipart",
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.data["data"]["avatar"] is not None
+
+    def test_upload_without_file_400(self, api_client, guest):
+        api_client.force_authenticate(user=guest)
+        resp = api_client.post("/api/v1/profile/me/avatar/", {}, format="multipart")
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_401_unauthenticated(self, api_client):
+        resp = api_client.post(
+            "/api/v1/profile/me/avatar/",
+            {"avatar": _make_image()},
+            format="multipart",
+        )
+        assert resp.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+class TestPublicProfileView:
+    def test_get_public_profile(self, api_client, guest):
+        resp = api_client.get(f"/api/v1/profiles/{guest.id}/")
+        assert resp.status_code == status.HTTP_200_OK
+        data = resp.data["data"]
+        assert data["name"] == guest.name
+        assert "bio" in data
+        assert "role" in data
+
+    def test_excludes_private_fields(self, api_client, guest):
+        resp = api_client.get(f"/api/v1/profiles/{guest.id}/")
+        data = resp.data["data"]
+        assert "email" not in data
+        assert "phone" not in data
+        assert "emergency_contact" not in data
+        assert "address" not in data
+        assert "preferred_name" not in data
+
+    def test_404_nonexistent_user(self, api_client):
+        resp = api_client.get("/api/v1/profiles/99999/")
+        assert resp.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_404_inactive_user(self, api_client, guest):
+        guest.is_active = False
+        guest.save()
+        resp = api_client.get(f"/api/v1/profiles/{guest.id}/")
+        assert resp.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_accessible_without_auth(self, api_client, guest):
+        resp = api_client.get(f"/api/v1/profiles/{guest.id}/")
+        assert resp.status_code == status.HTTP_200_OK
+
+
+@pytest.mark.django_db
+class TestProfileCompletionView:
+    def test_returns_completion_data(self, api_client, guest):
+        api_client.force_authenticate(user=guest)
+        resp = api_client.get("/api/v1/profile/me/completion/")
+        assert resp.status_code == status.HTTP_200_OK
+        data = resp.data["data"]
+        assert "percentage" in data
+        assert "completed" in data
+        assert "total" in data
+        assert "checklist" in data
+        assert data["total"] == 7
+
+    def test_401_unauthenticated(self, api_client):
+        resp = api_client.get("/api/v1/profile/me/completion/")
+        assert resp.status_code == status.HTTP_401_UNAUTHORIZED

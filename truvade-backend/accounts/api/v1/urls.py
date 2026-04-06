@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     AcceptInvitationView,
+    AvatarUploadView,
     CreateInvitationView,
     DeclineInvitationView,
     HostListView,
@@ -9,9 +10,12 @@ from .views import (
     InvitationListView,
     InvitedSignupView,
     LoginView,
+    MyProfileView,
     MyVerificationsView,
     OwnerListView,
     PendingInvitationsView,
+    ProfileCompletionView,
+    PublicProfileView,
     RemoveHostView,
     ResendOTPView,
     RevokeInvitationView,
@@ -73,5 +77,18 @@ urlpatterns = [
         "verifications/me/",
         MyVerificationsView.as_view(),
         name="verification-mine",
+    ),
+    # Profile
+    path("profile/me/", MyProfileView.as_view(), name="my-profile"),
+    path("profile/me/avatar/", AvatarUploadView.as_view(), name="avatar-upload"),
+    path(
+        "profile/me/completion/",
+        ProfileCompletionView.as_view(),
+        name="profile-completion",
+    ),
+    path(
+        "profiles/<int:user_id>/",
+        PublicProfileView.as_view(),
+        name="public-profile",
     ),
 ]

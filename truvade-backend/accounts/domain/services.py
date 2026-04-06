@@ -332,3 +332,47 @@ def review_verification(*, verification_id, admin, status, admin_notes=""):
     verification.reviewed_at = timezone.now()
     verification.save()
     return verification
+
+
+# --- Profile services ---
+
+_PROFILE_UPDATABLE_FIELDS = frozenset(
+    {
+        "name",
+        "bio",
+        "work",
+        "location",
+        "languages",
+        "emergency_contact",
+        "preferred_name",
+        "address",
+        "phone",
+    }
+)
+
+
+@transaction.atomic
+def update_profile(*, user, **fields):
+    """Update user profile fields. Only whitelisted fields are applied."""
+    update_fields = []
+    for field_name, value in fields.items():
+        if field_name not in _PROFILE_UPDATABLE_FIELDS:
+            continue
+        if field_name == "languages":
+            if not isinstance(value, list):
+                raise ValidationError("Languages must be a list.")
+            if not all(isinstance(lang, str) for lang in value):
+                raise ValidationError("Each language must be a string.")
+        setattr(user, field_name, value)
+        update_fields.append(field_name)
+    if update_fields:
+        user.save(update_fields=update_fields)
+    return user
+
+
+@transaction.atomic
+def upload_avatar(*, user, avatar):
+    """Upload and save user avatar image."""
+    user.avatar = avatar
+    user.save(update_fields=["avatar"])
+    return user
