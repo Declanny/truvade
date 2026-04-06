@@ -76,9 +76,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: deploy
     steps:
-      - name: Wait for server to start
-        run: sleep 10
-
       - name: Check health endpoint
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -86,4 +83,10 @@ jobs:
           username: ${{ secrets.DROPLET_USER }}
           key: ${{ secrets.DROPLET_SSH_KEY }}
           script: |
-            curl -f http://localhost:8000/api/health/
+            for i in 1 2 3 4 5 6 7; do
+              curl -sf http://localhost:8000/api/health/ && exit 0
+              echo "Attempt $i failed, retrying in 10s..."
+              sleep 10
+            done
+            echo "Health check failed after 7 attempts"
+            exit 1
