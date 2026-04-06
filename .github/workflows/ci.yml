@@ -57,3 +57,10 @@ jobs:
 
       - name: Run tests
         run: uv run pytest -q
+
+      - name: Health check
+        run: |
+          uv run python manage.py runserver 8111 &
+          sleep 3
+          curl -f http://localhost:8111/api/health/
+          kill %1
