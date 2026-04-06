@@ -1,4 +1,4 @@
-.PHONY: build up down test
+.PHONY: build up down test lint
 
 build:
 	docker compose up --build
@@ -11,3 +11,6 @@ down:
 
 test:
 	uv run pytest -q
+
+lint:
+	uv run ruff format . && uv run ruff check .
