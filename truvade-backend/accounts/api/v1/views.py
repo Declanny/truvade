@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError
 
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -338,6 +339,7 @@ class RemoveHostView(APIView):
 )
 class SubmitVerificationView(APIView):
     permission_classes = [IsAuthenticated, IsHostOrOwnerRole]
+    parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
         serializer = SubmitVerificationSerializer(data=request.data)
@@ -408,6 +410,7 @@ class MyProfileView(APIView):
 )
 class AvatarUploadView(APIView):
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
         serializer = AvatarUploadSerializer(data=request.data)
