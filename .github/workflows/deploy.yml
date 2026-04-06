@@ -80,4 +80,10 @@ jobs:
         run: sleep 10
 
       - name: Check health endpoint
-        run: curl -f http://${{ secrets.DROPLET_HOST }}/api/health/
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USER }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          script: |
+            curl -f http://localhost:8000/api/health/
