@@ -77,16 +77,11 @@ jobs:
     needs: deploy
     steps:
       - name: Check health endpoint
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.DROPLET_HOST }}
-          username: ${{ secrets.DROPLET_USER }}
-          key: ${{ secrets.DROPLET_SSH_KEY }}
-          script: |
-            for i in 1 2 3 4 5 6 7; do
-              curl -sf http://localhost/api/health/ && exit 0
-              echo "Attempt $i failed, retrying in 10s..."
-              sleep 10
-            done
-            echo "Health check failed after 7 attempts"
-            exit 1
+        run: |
+          for i in 1 2 3 4 5 6 7; do
+            curl -sf ${{ secrets.HEALTH_CHECK_URL }} && exit 0
+            echo "Attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+          echo "Health check failed after 7 attempts"
+          exit 1
