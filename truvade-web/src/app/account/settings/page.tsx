@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { Avatar, Input, Button } from "@/components/ui";
+import { AddressAutocomplete } from "@/components/ui/AddressAutocomplete";
 import { api, extractErrorMessage } from "@/lib/api";
 import type { ApiProfile } from "@/lib/api-types";
 import { useAuth } from "@/context/AuthContext";
@@ -38,6 +39,8 @@ function FieldRow({
   onEditToggle,
   onSave,
   saving,
+  saveDisabled = false,
+  saveDisabledReason,
   error,
   children,
 }: {
@@ -49,6 +52,8 @@ function FieldRow({
   onEditToggle: () => void;
   onSave?: () => void;
   saving?: boolean;
+  saveDisabled?: boolean;
+  saveDisabledReason?: string;
   error?: string;
   children?: React.ReactNode;
 }) {
@@ -79,15 +84,20 @@ function FieldRow({
               <span>{error}</span>
             </div>
           )}
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={onSave}
-            loading={saving}
-            disabled={saving}
-          >
-            Save
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={onSave}
+              loading={saving}
+              disabled={saving || saveDisabled}
+            >
+              Save
+            </Button>
+            {saveDisabled && saveDisabledReason && !saving && (
+              <span className="text-xs text-gray-500">{saveDisabledReason}</span>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -104,6 +114,10 @@ export default function PersonalInfoPage() {
   const [savingField, setSavingField] = useState<EditField>(null);
   const [saveError, setSaveError] = useState<Record<string, string>>({});
   const [savedMessage, setSavedMessage] = useState("");
+  /** Whether the user's current `draft.address` came from an autocomplete selection. */
+  const [addressSelected, setAddressSelected] = useState(false);
+  /** Same flag for the Location field, which also uses AddressAutocomplete. */
+  const [locationSelected, setLocationSelected] = useState(false);
 
   // Avatar upload
   const fileRef = useRef<HTMLInputElement>(null);
@@ -133,11 +147,22 @@ export default function PersonalInfoPage() {
     setSaveError({});
     setSavedMessage("");
     setEditingField(field);
+    if (field === "address") {
+      // Treat the saved address as already-verified so the user doesn't have to
+      // re-pick it just to look at the field. Editing one character will flip
+      // the flag back via AddressAutocomplete's onChange.
+      setAddressSelected(!!profile.address);
+    }
+    if (field === "location") {
+      setLocationSelected(!!profile.location);
+    }
   };
 
   const handleCancelEdit = () => {
     setEditingField(null);
     setSaveError({});
+    setAddressSelected(false);
+    setLocationSelected(false);
   };
 
   const handleSave = async (field: NonNullable<EditField>) => {
@@ -342,31 +367,33 @@ export default function PersonalInfoPage() {
           />
         </FieldRow>
 
-        {/* Identity verification — linked */}
-        <div className="border-b border-gray-100 py-6">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-900">
-                Identity verification
-              </p>
-              <p className="text-sm text-gray-500 mt-0.5">
-                {profile.is_verified
-                  ? "Verified"
-                  : user?.kycStatus === "PENDING_REVIEW"
-                  ? "Under review"
-                  : "Not started"}
-              </p>
+        {/* Identity verification — HOST/OWNER only (backend gates KYC behind those roles) */}
+        {(profile.role === "HOST" || profile.role === "OWNER") && (
+          <div className="border-b border-gray-100 py-6">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-gray-900">
+                  Identity verification
+                </p>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  {profile.is_verified
+                    ? "Verified"
+                    : user?.kycStatus === "PENDING_REVIEW"
+                    ? "Under review"
+                    : "Not started"}
+                </p>
+              </div>
+              {!profile.is_verified && user?.kycStatus !== "PENDING_REVIEW" && (
+                <Link
+                  href="/kyc"
+                  className="text-sm font-semibold text-gray-900 underline hover:text-gray-600 transition-colors ml-4"
+                >
+                  Start
+                </Link>
+              )}
             </div>
-            {!profile.is_verified && user?.kycStatus !== "PENDING_REVIEW" && (
-              <Link
-                href="/kyc"
-                className="text-sm font-semibold text-gray-900 underline hover:text-gray-600 transition-colors ml-4"
-              >
-                Start
-              </Link>
-            )}
           </div>
-        </div>
+        )}
 
         <FieldRow
           label="Address"
@@ -379,13 +406,21 @@ export default function PersonalInfoPage() {
           }
           onSave={() => handleSave("address")}
           saving={savingField === "address"}
+          saveDisabled={!addressSelected}
+          saveDisabledReason="Pick an address from the list to verify it."
           error={saveError.address}
         >
-          <Input
+          <AddressAutocomplete
             label="Address"
             value={draft.address ?? ""}
-            onChange={(e) => setDraft({ address: e.target.value })}
-            fullWidth
+            initiallySelected={
+              (draft.address ?? "") === (profile.address ?? "") &&
+              !!profile.address
+            }
+            onChange={(next, place) => {
+              setDraft({ address: next });
+              setAddressSelected(!!place);
+            }}
           />
         </FieldRow>
 
@@ -462,14 +497,22 @@ export default function PersonalInfoPage() {
           }
           onSave={() => handleSave("location")}
           saving={savingField === "location"}
+          saveDisabled={!locationSelected}
+          saveDisabledReason="Pick a place from the list to verify it."
           error={saveError.location}
         >
-          <Input
+          <AddressAutocomplete
             label="Location"
             value={draft.location ?? ""}
-            onChange={(e) => setDraft({ location: e.target.value })}
             placeholder="e.g. Lagos, Nigeria"
-            fullWidth
+            initiallySelected={
+              (draft.location ?? "") === (profile.location ?? "") &&
+              !!profile.location
+            }
+            onChange={(next, place) => {
+              setDraft({ location: next });
+              setLocationSelected(!!place);
+            }}
           />
         </FieldRow>
       </div>

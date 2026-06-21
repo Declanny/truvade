@@ -40,6 +40,7 @@ import type {
   ApiShortletImage,
 } from "@/lib/api-types";
 import { formatCurrency } from "@/lib/types";
+import { AddressAutocomplete } from "@/components/ui/AddressAutocomplete";
 
 type Tab = "overview" | "details" | "pricing" | "host";
 
@@ -493,6 +494,7 @@ function DetailsTab({
   const [title, setTitle] = useState(shortlet.title);
   const [description, setDescription] = useState(shortlet.description);
   const [address, setAddress] = useState(shortlet.address);
+  const [addressSelected, setAddressSelected] = useState(!!shortlet.address);
   const [city, setCity] = useState(shortlet.city);
   const [state, setState] = useState(shortlet.state);
   const [bedrooms, setBedrooms] = useState(shortlet.bedrooms);
@@ -570,14 +572,19 @@ function DetailsTab({
           />
         </Field>
 
-        <Field label="Street address">
-          <input
-            type="text"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            className={inputCls}
-          />
-        </Field>
+        <AddressAutocomplete
+          label="Street address"
+          value={address}
+          initiallySelected={addressSelected}
+          onChange={(next, place) => {
+            setAddress(next);
+            setAddressSelected(!!place);
+            if (place) {
+              if (place.city) setCity(place.city);
+              if (place.state) setState(place.state);
+            }
+          }}
+        />
 
         <div className="grid grid-cols-2 gap-4">
           <Field label="City">
@@ -662,6 +669,8 @@ function DetailsTab({
           saving={saving}
           saved={saved}
           error={saveError}
+          disabled={!addressSelected}
+          disabledReason="Pick a street address from the list to verify it."
         />
       </div>
     </div>
@@ -1157,11 +1166,15 @@ function SaveRow({
   saving,
   saved,
   error,
+  disabled = false,
+  disabledReason,
 }: {
   onSave: () => void;
   saving: boolean;
   saved: boolean;
   error: string;
+  disabled?: boolean;
+  disabledReason?: string;
 }) {
   return (
     <div>
@@ -1171,11 +1184,11 @@ function SaveRow({
           <span>{error}</span>
         </div>
       )}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <button
           type="button"
           onClick={onSave}
-          disabled={saving}
+          disabled={saving || disabled}
           className="px-5 py-2.5 bg-[#0B3D2C] text-white text-sm font-semibold rounded-xl hover:bg-[#0F5240] transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {saving && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -1185,6 +1198,9 @@ function SaveRow({
           <span className="text-xs text-emerald-700 flex items-center gap-1">
             <Check className="w-3.5 h-3.5" /> Saved
           </span>
+        )}
+        {disabled && disabledReason && !saving && (
+          <span className="text-xs text-gray-500">{disabledReason}</span>
         )}
       </div>
     </div>

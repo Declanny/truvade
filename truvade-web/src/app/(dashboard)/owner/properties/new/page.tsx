@@ -9,6 +9,7 @@ import {
 import { formatCurrency } from "@/lib/types";
 import type { ApiAmenity, ApiShortlet } from "@/lib/api-types";
 import { api, extractErrorMessage } from "@/lib/api";
+import { AddressAutocomplete } from "@/components/ui/AddressAutocomplete";
 
 // ─── Types ───────────────────────────────────────────────
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -122,6 +123,9 @@ export default function NewPropertyWizard() {
   const [images, setImages] = useState<{ file: File; preview: string }[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  /** Whether the current `draft.address` was picked from Google's autocomplete. */
+  const [addressSelected, setAddressSelected] = useState(false);
+
   useEffect(() => {
     api.get<ApiAmenity[]>("/v1/amenities/").then(setAmenities).catch(() => {});
   }, []);
@@ -138,7 +142,12 @@ export default function NewPropertyWizard() {
   const canProceed = useMemo(() => {
     switch (step) {
       case 1: return draft.propertyType !== "";
-      case 2: return draft.title.trim().length > 0 && draft.city.trim().length > 0;
+      case 2:
+        return (
+          draft.title.trim().length > 0 &&
+          addressSelected &&
+          draft.city.trim().length > 0
+        );
       case 3: return true;
       case 4: return draft.selectedAmenityIds.length > 0;
       case 5: return images.length >= 5;
@@ -146,7 +155,7 @@ export default function NewPropertyWizard() {
       case 7: return true;
       default: return false;
     }
-  }, [step, draft, images]);
+  }, [step, draft, images, addressSelected]);
 
   const handleNext = () => { if (step < 7) setStep((s) => (s + 1) as Step); };
   const handleBack = () => { if (step > 1) setStep((s) => (s - 1) as Step); };
@@ -272,29 +281,43 @@ export default function NewPropertyWizard() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-900 transition-colors resize-none" />
               <p className="text-xs text-gray-400 mt-1.5">{draft.description.length}/1000</p>
             </div>
+            <AddressAutocomplete
+              label="Street address"
+              value={draft.address}
+              initiallySelected={addressSelected}
+              onChange={(next, place) => {
+                setDraft((d) => ({
+                  ...d,
+                  address: next,
+                  ...(place
+                    ? {
+                        city: place.city || d.city,
+                        state: place.state || d.state,
+                      }
+                    : {}),
+                }));
+                setAddressSelected(!!place);
+              }}
+            />
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
                 <input type="text" value={draft.city}
                   onChange={(e) => setDraft((d) => ({ ...d, city: e.target.value }))}
-                  placeholder="e.g. Victoria Island"
+                  placeholder="Auto-filled from address"
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-900 transition-colors" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
                 <input type="text" value={draft.state}
                   onChange={(e) => setDraft((d) => ({ ...d, state: e.target.value }))}
-                  placeholder="e.g. Lagos"
+                  placeholder="Auto-filled from address"
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-900 transition-colors" />
               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Street address</label>
-              <input type="text" value={draft.address}
-                onChange={(e) => setDraft((d) => ({ ...d, address: e.target.value }))}
-                placeholder="e.g. 12 Ahmadu Bello Way"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-900 transition-colors" />
-            </div>
+            <p className="text-xs text-gray-500">
+              City and state are filled in automatically when you pick an address, but you can adjust them if Google has it wrong.
+            </p>
           </div>
         );
 

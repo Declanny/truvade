@@ -12,10 +12,13 @@ import {
   AlertCircle,
   Check,
   CreditCard,
+  Lock,
 } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui";
 import { api, extractErrorMessage } from "@/lib/api";
 import type { ApiBank, ApiBankAccount } from "@/lib/api-types";
+import { useAuth } from "@/context/AuthContext";
 
 interface ResolvedAccount {
   account_number: string;
@@ -24,8 +27,11 @@ interface ResolvedAccount {
 }
 
 export default function PaymentsPage() {
+  const { activeRole } = useAuth();
+  const allowed = activeRole === "HOST" || activeRole === "OWNER";
+
   const [accounts, setAccounts] = useState<ApiBankAccount[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(allowed);
   const [loadError, setLoadError] = useState("");
 
   const [showAddForm, setShowAddForm] = useState(false);
@@ -45,8 +51,38 @@ export default function PaymentsPage() {
   }, []);
 
   useEffect(() => {
+    if (!allowed) return;
     fetchAccounts();
-  }, [fetchAccounts]);
+  }, [allowed, fetchAccounts]);
+
+  if (!allowed) {
+    return (
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Payouts</h2>
+        <div className="mt-6 border border-gray-200 rounded-xl p-6 flex items-start gap-4">
+          <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
+            <Lock className="w-5 h-5 text-gray-400" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold text-gray-900">
+              Payouts are for hosts and owners
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">
+              You only need a payout bank account once you start hosting
+              shortlets on Truvade.{" "}
+              <Link
+                href="/owner"
+                className="text-[#0B3D2C] font-medium underline"
+              >
+                List your property
+              </Link>{" "}
+              to get started.
+            </p>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
 
   const showSavedMessage = (msg: string) => {
     setSavedMessage(msg);

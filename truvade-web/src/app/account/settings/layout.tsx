@@ -10,18 +10,38 @@ import {
   CreditCard,
   Globe,
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
-const settingsNav = [
+type NavItem = {
+  label: string;
+  href: string;
+  icon: typeof User;
+  /** Hide this entry unless the active role is in this list. Empty/undefined = show to everyone. */
+  roles?: ("HOST" | "OWNER")[];
+};
+
+const settingsNav: NavItem[] = [
   { label: "Personal information", href: "/account/settings", icon: User },
   { label: "Login & security", href: "/account/settings/security", icon: Shield },
   { label: "Privacy", href: "/account/settings/privacy", icon: Eye },
   { label: "Notifications", href: "/account/settings/notifications", icon: Bell },
-  { label: "Payments & payouts", href: "/account/settings/payments", icon: CreditCard },
+  {
+    label: "Payments & payouts",
+    href: "/account/settings/payments",
+    icon: CreditCard,
+    roles: ["HOST", "OWNER"],
+  },
   { label: "Languages & currency", href: "/account/settings/preferences", icon: Globe },
 ];
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { activeRole } = useAuth();
+  const visibleNav = settingsNav.filter(
+    (item) =>
+      !item.roles ||
+      (activeRole !== "GUEST" && item.roles.includes(activeRole as "HOST" | "OWNER"))
+  );
 
   return (
     <div>
@@ -32,7 +52,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
         <nav className="lg:w-[280px] flex-shrink-0">
           {/* Mobile: horizontal scroll */}
           <div className="flex lg:hidden gap-2 overflow-x-auto pb-4 scrollbar-hide">
-            {settingsNav.map((item) => {
+            {visibleNav.map((item) => {
               const isActive = pathname === item.href;
               return (
                 <Link
@@ -53,7 +73,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
 
           {/* Desktop: vertical list */}
           <div className="hidden lg:block space-y-1">
-            {settingsNav.map((item) => {
+            {visibleNav.map((item) => {
               const isActive = pathname === item.href;
               return (
                 <Link

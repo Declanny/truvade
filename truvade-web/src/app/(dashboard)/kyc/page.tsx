@@ -58,10 +58,17 @@ export default function KYCPage() {
 
   useEffect(() => {
     if (!user) return;
+    // Backend only allows HOST/OWNER to access /v1/verifications/. Bounce
+    // guests back to their dashboard before firing a request that would 403.
+    if (activeRole !== "HOST" && activeRole !== "OWNER") {
+      router.replace("/");
+      return;
+    }
     refresh();
-  }, [user, refresh]);
+  }, [user, activeRole, refresh, router]);
 
   if (!user) return null;
+  if (activeRole !== "HOST" && activeRole !== "OWNER") return null;
 
   const dashboardHref = activeRole === "OWNER" ? "/owner" : "/host";
 
