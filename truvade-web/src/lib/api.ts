@@ -134,15 +134,35 @@ async function request<T>(
     return undefined as T;
   }
 
-  const json = await res.json();
+  // Try to parse JSON; backend sometimes returns HTML (Django debug page, proxy
+  // error page, etc.) on 500s. Don't let a raw "Unexpected token '<'" leak to
+  // the UI.
+  let json: unknown = null;
+  try {
+    json = await res.json();
+  } catch {
+    if (!res.ok) {
+      throw new ApiError(genericMessageForStatus(res.status), res.status);
+    }
+    throw new ApiError("Unexpected server response. Please try again.", res.status);
+  }
 
   if (!res.ok) {
     const err = (json as { error?: { message?: string; details?: Record<string, unknown> } })?.error ?? {};
-    const message = err.message ?? "Something went wrong.";
+    const message = err.message ?? genericMessageForStatus(res.status);
     throw new ApiError(message, res.status, err.details);
   }
 
   return (json as { data: T }).data;
+}
+
+function genericMessageForStatus(status: number): string {
+  if (status === 401) return "Please log in to continue.";
+  if (status === 403) return "Action not allowed.";
+  if (status === 404) return "Not found.";
+  if (status === 429) return "Too many attempts. Wait a moment and try again.";
+  if (status >= 500) return "Something went wrong. Please try again.";
+  return "Something went wrong. Please try again.";
 }
 
 // ── Public API ───────────────────────────────────────────────────────────────
