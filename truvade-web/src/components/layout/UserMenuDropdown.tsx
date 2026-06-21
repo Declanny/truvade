@@ -19,7 +19,8 @@ import {
 interface UserMenuDropdownProps {
   isOpen: boolean;
   onClose: () => void;
-  isLoggedIn?: boolean;
+  isLoggedIn: boolean;
+  onLogout?: () => void;
 }
 
 const menuItemClass =
@@ -28,7 +29,8 @@ const menuItemClass =
 export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
   isOpen,
   onClose,
-  isLoggedIn = true,
+  isLoggedIn,
+  onLogout,
 }) => {
   return (
     <AnimatePresence>
@@ -98,7 +100,13 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
               <div className="my-1.5 border-t border-gray-100" />
 
               {/* Section 4: Logout */}
-              <button onClick={onClose} className={menuItemClass}>
+              <button
+                onClick={() => {
+                  onClose();
+                  onLogout?.();
+                }}
+                className={menuItemClass}
+              >
                 <LogOut className="w-4 h-4" />
                 Log out
               </button>

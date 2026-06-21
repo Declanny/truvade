@@ -4,9 +4,10 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, ChevronDown, MapPinHouse, Home, Menu } from "lucide-react";
+import { Search, X, ChevronDown, MapPinHouse, Home, Menu, User as UserIcon } from "lucide-react";
 import Logo from "../ui/Logo";
 import { UserMenuDropdown } from "./UserMenuDropdown";
+import { useAuth } from "@/context/AuthContext";
 
 const navLinks = [
   { href: "/shortlets", label: "Shortlets", icon: MapPinHouse, soon: false },
@@ -15,12 +16,20 @@ const navLinks = [
 export const Header: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const { user, logout } = useAuth();
+  const isLoggedIn = !!user;
+  const userInitial = (user?.name || user?.email || "").trim().charAt(0).toUpperCase();
   const [isScrolled, setIsScrolled] = useState(false);
   const [pastBanner, setPastBanner] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [desktopQuery, setDesktopQuery] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    router.push("/");
+  };
   const isHome = pathname === "/";
   const menuRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -133,8 +142,10 @@ export const Header: React.FC = () => {
               {/* Switch to Host */}
               <Link
                 href="/owner"
-                className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
-                  transparent ? "text-white hover:text-white/80" : "text-gray-600 hover:text-gray-900"
+                className={`flex items-center gap-1.5 text-sm transition-colors ${
+                  transparent
+                    ? "text-white hover:text-white font-semibold drop-shadow-[0_1px_4px_rgba(0,0,0,0.35)]"
+                    : "text-gray-700 hover:text-gray-900 font-semibold"
                 }`}
               >
                 <Home className="w-4 h-4" />
@@ -152,14 +163,14 @@ export const Header: React.FC = () => {
                     <Link
                       key={link.label}
                       href={link.href}
-                      className={`relative flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      className={`relative flex items-center gap-2 px-4 py-2 text-sm rounded-lg transition-colors ${
                         transparent
                           ? active
-                            ? "text-white bg-white/15"
-                            : "text-white hover:text-white/80 hover:bg-white/10"
+                            ? "text-white font-bold bg-white/15 drop-shadow-[0_1px_4px_rgba(0,0,0,0.35)]"
+                            : "text-white hover:text-white font-semibold hover:bg-white/10 drop-shadow-[0_1px_4px_rgba(0,0,0,0.35)]"
                           : active
-                            ? "text-[#0B3D2C] bg-[#0B3D2C]/5"
-                            : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                            ? "text-[#0B3D2C] font-bold bg-[#0B3D2C]/5"
+                            : "text-gray-700 hover:text-gray-900 font-semibold hover:bg-gray-50"
                       }`}
                     >
                       <link.icon className="w-5 h-5" />
@@ -193,11 +204,20 @@ export const Header: React.FC = () => {
                 >
                   <Menu className={`w-4 h-4 ${transparent ? "text-white" : "text-gray-700"}`} />
                   <div className="w-7 h-7 rounded-full bg-[#0B3D2C] flex items-center justify-center">
-                    <span className="text-white text-xs font-semibold">G</span>
+                    {isLoggedIn && userInitial ? (
+                      <span className="text-white text-xs font-semibold">{userInitial}</span>
+                    ) : (
+                      <UserIcon className="w-3.5 h-3.5 text-white" />
+                    )}
                   </div>
                 </button>
 
-                <UserMenuDropdown isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
+                <UserMenuDropdown
+                  isOpen={menuOpen}
+                  onClose={() => setMenuOpen(false)}
+                  isLoggedIn={isLoggedIn}
+                  onLogout={handleLogout}
+                />
               </div>
             </div>
 
@@ -226,11 +246,20 @@ export const Header: React.FC = () => {
                 >
                   <Menu className="w-4 h-4 text-gray-700" />
                   <div className="w-7 h-7 rounded-full bg-[#0B3D2C] flex items-center justify-center">
-                    <span className="text-white text-xs font-semibold">G</span>
+                    {isLoggedIn && userInitial ? (
+                      <span className="text-white text-xs font-semibold">{userInitial}</span>
+                    ) : (
+                      <UserIcon className="w-3.5 h-3.5 text-white" />
+                    )}
                   </div>
                 </button>
 
-                <UserMenuDropdown isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
+                <UserMenuDropdown
+                  isOpen={menuOpen}
+                  onClose={() => setMenuOpen(false)}
+                  isLoggedIn={isLoggedIn}
+                  onLogout={handleLogout}
+                />
               </div>
             </div>
           </div>

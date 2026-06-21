@@ -23,7 +23,7 @@ export default function Logo({
   return (
     <div className={`flex items-center gap-2.5 ${className}`}>
       <Image
-        src="/truvade.png"
+        src="/truvade.png?v=2"
         alt="TruVade"
         width={Math.round(px * ASPECT)}
         height={px}

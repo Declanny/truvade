@@ -145,7 +145,7 @@ function HeroBanner() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/60" />
         <div className="relative h-full flex flex-col items-center justify-center px-8 pt-[68px]">
-          <h1 className="text-4xl md:text-5xl font-bold text-white text-center max-w-3xl leading-tight">
+          <h1 className="text-4xl md:text-6xl font-extrabold text-white text-center max-w-3xl leading-tight tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.45)]">
             Stay Different. Stay Anywhere.
           </h1>
           <form
