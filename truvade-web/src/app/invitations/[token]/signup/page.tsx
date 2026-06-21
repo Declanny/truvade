@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-export default async function LegacyInvitePage({
+export default async function SignupAliasPage({
   params,
 }: {
   params: Promise<{ token: string }>;

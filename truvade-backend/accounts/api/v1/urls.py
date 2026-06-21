@@ -1,4 +1,5 @@
 from django.urls import path
+from rest_framework_simplejwt.views import TokenRefreshView
 
 from .views import (
     AcceptInvitationView,
@@ -26,6 +27,7 @@ from .views import (
 
 urlpatterns = [
     # Auth
+    path("auth/token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
     path("auth/signup/", SignupView.as_view(), name="signup"),
     path("auth/signup/invited/", InvitedSignupView.as_view(), name="invited-signup"),
     path("auth/login/", LoginView.as_view(), name="login"),

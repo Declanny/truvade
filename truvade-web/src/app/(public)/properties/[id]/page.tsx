@@ -1,40 +1,22 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  MapPin,
-  Star,
-  Users,
-  BedDouble,
-  Bath,
-  Minus,
-  Plus,
-  ChevronLeft,
-  Share2,
-  Heart,
-  ShieldCheck,
-  Wifi,
-  Wind,
-  Car,
-  UtensilsCrossed,
-  Tv,
-  Dumbbell,
-  Waves,
-  Zap,
-  Droplets,
-  TreePine,
-  PawPrint,
-  Monitor,
-  Flame,
-  MessageSquare,
+  MapPin, Star, Users, BedDouble, Bath, Minus, Plus,
+  ChevronLeft, Share2, Heart, ShieldCheck,
+  Wifi, Wind, Car, UtensilsCrossed, Tv, Dumbbell, Waves,
+  Zap, Droplets, TreePine, PawPrint, Monitor, Flame,
 } from "lucide-react";
 import { Container } from "@/components/layout";
 import { Button, Badge, Card } from "@/components/ui";
 import { PropertyGallery, HostSection, BookingCalendar, PropertyMap } from "@/components/property";
-import { mockProperties, mockBookings } from "@/lib/mock-data";
 import { formatCurrency, calculateNights } from "@/lib/types";
+import type { Property } from "@/lib/types";
+import type { ApiAvailability } from "@/lib/api-types";
+import { fetchPublicShortlet } from "@/lib/shortlet-utils";
+import { api } from "@/lib/api";
 
 const amenityIcons: Record<string, React.ElementType> = {
   WiFi: Wifi,
@@ -53,23 +35,61 @@ const amenityIcons: Record<string, React.ElementType> = {
   Security: ShieldCheck,
 };
 
+// ── Skeleton ──────────────────────────────────────────────────────────────────
+
+function DetailSkeleton() {
+  return (
+    <Container size="lg">
+      <div className="py-4 md:py-8 animate-pulse">
+        <div className="aspect-[16/7] rounded-2xl bg-gray-200 mb-8" />
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8">
+          <div className="space-y-4">
+            <div className="h-8 bg-gray-200 rounded w-3/4" />
+            <div className="h-4 bg-gray-200 rounded w-1/2" />
+            <div className="h-32 bg-gray-200 rounded" />
+          </div>
+          <div className="h-64 bg-gray-200 rounded-2xl" />
+        </div>
+      </div>
+    </Container>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
 export default function PropertyDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
 
-  const property = mockProperties.find((p) => p.id === id);
+  const [property, setProperty] = useState<Property | null>(null);
+  const [bookedRanges, setBookedRanges] = useState<{ checkIn: Date; checkOut: Date }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guestCount, setGuestCount] = useState(1);
   const [calendarOpen, setCalendarOpen] = useState(false);
 
-  const bookedRanges = useMemo(
-    () => mockBookings
-      .filter((b) => b.propertyId === id && b.status !== "CANCELLED")
-      .map((b) => ({ checkIn: new Date(b.checkIn), checkOut: new Date(b.checkOut) })),
-    [id]
-  );
+  useEffect(() => {
+    if (!id) return;
+
+    Promise.all([
+      fetchPublicShortlet(id),
+      api.get<ApiAvailability[]>(`/v1/shortlets/${id}/availability/`),
+    ])
+      .then(([prop, availability]) => {
+        setProperty(prop);
+        setBookedRanges(
+          availability.map((a) => ({
+            checkIn: new Date(a.check_in),
+            checkOut: new Date(a.check_out),
+          }))
+        );
+      })
+      .catch(() => setNotFound(true))
+      .finally(() => setLoading(false));
+  }, [id]);
 
   const nights = useMemo(() => {
     if (!checkIn || !checkOut) return 0;
@@ -80,15 +100,15 @@ export default function PropertyDetailPage() {
   const serviceFee = Math.round(subtotal * 0.08);
   const total = property ? subtotal + property.cleaningFee + serviceFee : 0;
 
-  if (!property) {
+  if (loading) return <DetailSkeleton />;
+
+  if (notFound || !property) {
     return (
       <Container size="lg">
         <div className="py-20 text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Property Not Found
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Property Not Found</h1>
           <p className="text-gray-600 mb-6">
-            The property you are looking for does not exist or has been removed.
+            This property does not exist or is no longer available.
           </p>
           <Link href="/shortlets">
             <Button variant="primary">Browse Shortlets</Button>
@@ -109,7 +129,7 @@ export default function PropertyDetailPage() {
   return (
     <Container size="lg">
       <div className="py-4 md:py-8">
-        {/* Top Bar */}
+        {/* Top bar */}
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={() => router.back()}
@@ -131,11 +151,10 @@ export default function PropertyDetailPage() {
         {/* Gallery */}
         <PropertyGallery images={property.images} alt={property.title} />
 
-        {/* Content Grid */}
+        {/* Content grid */}
         <div className="mt-6 md:mt-8 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 lg:gap-12">
-          {/* Left Column */}
+          {/* Left column */}
           <div>
-            {/* Title & Meta */}
             <div className="pb-6 border-b border-gray-200">
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 {property.verified && (
@@ -143,13 +162,9 @@ export default function PropertyDetailPage() {
                     Verified
                   </Badge>
                 )}
-                {property.featured && (
-                  <Badge variant="accent" size="sm">Featured</Badge>
-                )}
+                {property.featured && <Badge variant="accent" size="sm">Featured</Badge>}
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                {property.title}
-              </h1>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{property.title}</h1>
               <div className="flex items-center gap-4 mt-3 text-gray-600">
                 <div className="flex items-center gap-1">
                   <MapPin className="w-4 h-4" />
@@ -187,102 +202,49 @@ export default function PropertyDetailPage() {
 
             {/* Description */}
             <div className="py-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-3">
-                About this property
-              </h2>
-              <p className="text-gray-600 leading-relaxed">
-                {property.description}
-              </p>
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">About this property</h2>
+              <p className="text-gray-600 leading-relaxed">{property.description}</p>
               <p className="mt-3 text-sm text-gray-500">
                 Minimum stay: {property.minNights} night{property.minNights !== 1 && "s"}
               </p>
             </div>
 
             {/* Amenities */}
-            <div className="py-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Amenities
-              </h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {property.amenities.map((amenity) => {
-                  const Icon = amenityIcons[amenity] || ShieldCheck;
-                  return (
-                    <div
-                      key={amenity}
-                      className="flex items-center gap-3 text-gray-700"
-                    >
-                      <Icon className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                      <span className="text-sm">{amenity}</span>
-                    </div>
-                  );
-                })}
+            {property.amenities.length > 0 && (
+              <div className="py-6 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Amenities</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {property.amenities.map((amenity) => {
+                    const Icon = amenityIcons[amenity] || ShieldCheck;
+                    return (
+                      <div key={amenity} className="flex items-center gap-3 text-gray-700">
+                        <Icon className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                        <span className="text-sm">{amenity}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Host Info */}
+            {/* Host */}
             <HostSection property={property} />
 
-            {/* Reviews */}
-            <div className="py-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Reviews
-              </h2>
-              {property.rating ? (
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="flex items-center gap-1">
-                    <Star className="w-6 h-6 fill-black text-black" />
-                    <span className="text-2xl font-bold">
-                      {property.rating.toFixed(1)}
-                    </span>
-                  </div>
-                  <span className="text-gray-500">
-                    &middot; {property.reviewCount} reviews
-                  </span>
+            {/* Reviews — placeholder until reviews backend is built */}
+            {property.reviewCount > 0 && (
+              <div className="py-6 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Reviews</h2>
+                <div className="flex items-center gap-3">
+                  <Star className="w-6 h-6 fill-black text-black" />
+                  <span className="text-2xl font-bold">{property.rating?.toFixed(1)}</span>
+                  <span className="text-gray-500">&middot; {property.reviewCount} reviews</span>
                 </div>
-              ) : null}
-              <div className="space-y-6">
-                {[
-                  { initials: "AN", name: "Adaeze Nwosu", rating: 5, date: "February 2026", text: "Absolutely stunning apartment! The ocean view was breathtaking and the amenities were top-notch. The host was incredibly responsive and helpful. Will definitely be coming back!" },
-                  { initials: "EO", name: "Emeka Obi", rating: 4, date: "January 2026", text: "Great location and very clean. The kitchen was well-equipped and the beds were comfortable. Only minor issue was the WiFi speed during peak hours, but overall an excellent stay." },
-                  { initials: "FB", name: "Fatima Bello", rating: 5, date: "December 2025", text: "Perfect for our family getaway. The kids loved the pool and there was plenty of space for everyone. Security was excellent and the neighborhood felt very safe." },
-                  { initials: "KA", name: "Kola Adeyemi", rating: 4.5, date: "November 2025", text: "Very well-maintained property. Check-in was smooth and the host provided great local restaurant recommendations. The generator was a lifesaver during the power outages." },
-                ].map((review, i) => (
-                  <div key={i} className="flex gap-4">
-                    <div className="w-10 h-10 rounded-full bg-[#0B3D2C] flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
-                      {review.initials}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-gray-900 text-sm">{review.name}</span>
-                        <span className="text-gray-300">&middot;</span>
-                        <span className="text-sm text-gray-500">{review.date}</span>
-                      </div>
-                      <div className="flex items-center gap-0.5 mb-2">
-                        {Array.from({ length: 5 }, (_, j) => (
-                          <Star
-                            key={j}
-                            className={`w-3.5 h-3.5 ${
-                              j < Math.floor(review.rating)
-                                ? "fill-black text-black"
-                                : j < review.rating
-                                ? "fill-black/50 text-black/50"
-                                : "text-gray-300"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <p className="text-sm text-gray-600 leading-relaxed">{review.text}</p>
-                    </div>
-                  </div>
-                ))}
               </div>
-            </div>
+            )}
 
             {/* Map */}
             <div className="py-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Location
-              </h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Location</h2>
               <p className="text-sm text-gray-600 mb-3">
                 {property.city}, {property.state}, {property.country}
               </p>
@@ -297,7 +259,7 @@ export default function PropertyDetailPage() {
             </div>
           </div>
 
-          {/* Right Sidebar - Booking Card */}
+          {/* Right sidebar — booking card */}
           <div className="order-first lg:order-last">
             <div className="lg:sticky lg:top-24">
               <Card variant="bordered" padding="lg">
@@ -316,7 +278,7 @@ export default function PropertyDetailPage() {
                   )}
                 </div>
 
-                {/* Dates */}
+                {/* Date picker */}
                 <div className="relative mb-4">
                   <button
                     type="button"
@@ -329,7 +291,13 @@ export default function PropertyDetailPage() {
                           Check-in
                         </span>
                         <span className={`text-sm ${checkIn ? "text-gray-900" : "text-gray-400"}`}>
-                          {checkIn ? new Date(checkIn + "T00:00:00").toLocaleDateString("en-NG", { month: "short", day: "numeric", year: "numeric" }) : "Add date"}
+                          {checkIn
+                            ? new Date(checkIn + "T00:00:00").toLocaleDateString("en-NG", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })
+                            : "Add date"}
                         </span>
                       </div>
                       <div className="p-3">
@@ -337,7 +305,13 @@ export default function PropertyDetailPage() {
                           Check-out
                         </span>
                         <span className={`text-sm ${checkOut ? "text-gray-900" : "text-gray-400"}`}>
-                          {checkOut ? new Date(checkOut + "T00:00:00").toLocaleDateString("en-NG", { month: "short", day: "numeric", year: "numeric" }) : "Add date"}
+                          {checkOut
+                            ? new Date(checkOut + "T00:00:00").toLocaleDateString("en-NG", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })
+                            : "Add date"}
                         </span>
                       </div>
                     </div>
@@ -375,15 +349,15 @@ export default function PropertyDetailPage() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setGuestCount(Math.max(1, guestCount - 1))}
-                        className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center hover:border-gray-500 transition-colors disabled:opacity-30"
                         disabled={guestCount <= 1}
+                        className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center hover:border-gray-500 transition-colors disabled:opacity-30"
                       >
                         <Minus className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => setGuestCount(Math.min(property.maxGuests, guestCount + 1))}
-                        className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center hover:border-gray-500 transition-colors disabled:opacity-30"
                         disabled={guestCount >= property.maxGuests}
+                        className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center hover:border-gray-500 transition-colors disabled:opacity-30"
                       >
                         <Plus className="w-3.5 h-3.5" />
                       </button>
@@ -397,12 +371,10 @@ export default function PropertyDetailPage() {
 
                 {nights > 0 && (
                   <div className="mt-5 space-y-3 text-sm">
-                    <p className="text-center text-gray-500">
-                      You won&apos;t be charged yet
-                    </p>
+                    <p className="text-center text-gray-500">You won&apos;t be charged yet</p>
                     <div className="flex justify-between text-gray-700">
                       <span className="underline">
-                        {formatCurrency(property.basePrice)} x {nights} night{nights !== 1 && "s"}
+                        {formatCurrency(property.basePrice)} × {nights} night{nights !== 1 && "s"}
                       </span>
                       <span>{formatCurrency(subtotal)}</span>
                     </div>

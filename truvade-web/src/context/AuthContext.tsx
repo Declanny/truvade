@@ -1,19 +1,75 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  ReactNode,
+} from "react";
 import type { User, UserRole, KYCStatus, KYCStepKey, KYCVerification, KYCStep } from "@/lib/types";
 import { KYC_STEPS_OWNER, KYC_STEPS_HOST } from "@/lib/types";
-import { mockUsers } from "@/lib/mock-data";
+import { api, setTokens, clearTokens, getAccessToken } from "@/lib/api";
+import type { ApiProfile, ApiAuthResult, ApiRole, ApiVerification } from "@/lib/api-types";
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function mapProfileToUser(profile: ApiProfile): User {
+  const kycStatus: KYCStatus = profile.is_verified ? "APPROVED" : "NOT_STARTED";
+  return {
+    id: String(profile.id),
+    email: profile.email,
+    phone: profile.phone,
+    name: profile.name,
+    avatar: profile.avatar ?? undefined,
+    roles: [profile.role as UserRole],
+    verified: profile.is_verified,
+    kycStatus,
+    createdAt: new Date(profile.date_joined),
+  };
+}
+
+function roleFromUser(user: User): UserRole {
+  return user.roles[0] ?? "GUEST";
+}
+
+function kycStatusFromVerification(v: ApiVerification | undefined): KYCStatus | null {
+  if (!v) return null;
+  if (v.status === "APPROVED") return "APPROVED";
+  if (v.status === "PENDING") return "PENDING_REVIEW";
+  if (v.status === "REJECTED") return "REJECTED";
+  return null;
+}
+
+async function fetchLatestKYCStatus(role: UserRole): Promise<KYCStatus | null> {
+  if (role !== "HOST" && role !== "OWNER") return null;
+  try {
+    const verifications = await api.get<ApiVerification[]>("/v1/verifications/me/");
+    // Backend returns newest first
+    return kycStatusFromVerification(verifications[0]);
+  } catch {
+    return null;
+  }
+}
+
+// ── Context types ─────────────────────────────────────────────────────────────
 
 interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
-  login: (email: string) => void;
+  /** Step 1 of login: sends OTP to email. */
+  login: (email: string) => Promise<void>;
+  /** Step 1 of signup: registers user and sends OTP. */
+  signup: (name: string, email: string, phone: string, role: ApiRole) => Promise<void>;
+  /** Step 2 of both flows: verifies OTP and sets the logged-in user. */
+  verifyOTP: (email: string, otp: string) => Promise<User>;
+  /** Resends the OTP to the given email. */
+  resendOTP: (email: string) => Promise<void>;
   logout: () => void;
   updateKYCStatus: (status: KYCStatus) => void;
   completeKYCStep: (stepKey: KYCStepKey) => void;
   switchRole: (role: UserRole) => void;
-  switchUser: (userId: string) => void;
   activeRole: UserRole;
   isKYCComplete: boolean;
   isKYCRequired: boolean;
@@ -21,37 +77,86 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+// ── Provider ──────────────────────────────────────────────────────────────────
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(mockUsers[0]); // default: unverified owner
-  const [activeRole, setActiveRole] = useState<UserRole>(mockUsers[0].roles[0]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [activeRole, setActiveRole] = useState<UserRole>("GUEST");
+  const [isLoading, setIsLoading] = useState(true);
+
+  // On mount: restore session from stored access token
+  useEffect(() => {
+    const token = getAccessToken();
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
+    (async () => {
+      try {
+        const profile = await api.get<ApiProfile>("/v1/profile/me/");
+        const u = mapProfileToUser(profile);
+        const role = roleFromUser(u);
+        const refinedKyc = await fetchLatestKYCStatus(role);
+        if (refinedKyc && refinedKyc !== u.kycStatus) {
+          u.kycStatus = refinedKyc;
+        }
+        setUser(u);
+        setActiveRole(role);
+      } catch {
+        // Token invalid or expired and refresh failed — clear state
+        clearTokens();
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
 
   const isKYCComplete = user?.kycStatus === "APPROVED";
-  const isKYCRequired = !!(user && (activeRole === "OWNER" || activeRole === "HOST") && user.kycStatus !== "APPROVED");
+  const isKYCRequired = !!(
+    user &&
+    (activeRole === "OWNER" || activeRole === "HOST") &&
+    user.kycStatus !== "APPROVED"
+  );
 
-  const login = useCallback((email: string) => {
-    setIsLoading(true);
-    setTimeout(() => {
-      const found = mockUsers.find((u) => u.email === email);
-      if (found) {
-        setUser(found);
-        setActiveRole(found.roles[0]);
-      }
-      setIsLoading(false);
-    }, 500);
+  const login = useCallback(async (email: string) => {
+    await api.post("/v1/auth/login/", { email });
+  }, []);
+
+  const signup = useCallback(
+    async (name: string, email: string, phone: string, role: ApiRole) => {
+      await api.post("/v1/auth/signup/", { name, email, phone, role });
+    },
+    []
+  );
+
+  const verifyOTP = useCallback(async (email: string, otp: string): Promise<User> => {
+    const result = await api.post<ApiAuthResult>("/v1/auth/verify-otp/", {
+      email,
+      otp,
+    });
+    setTokens(result.tokens.access, result.tokens.refresh);
+
+    // Fetch the full profile so we have is_verified, bio, etc.
+    const profile = await api.get<ApiProfile>("/v1/profile/me/");
+    const u = mapProfileToUser(profile);
+    const role = roleFromUser(u);
+    const refinedKyc = await fetchLatestKYCStatus(role);
+    if (refinedKyc && refinedKyc !== u.kycStatus) {
+      u.kycStatus = refinedKyc;
+    }
+    setUser(u);
+    setActiveRole(role);
+    return u;
+  }, []);
+
+  const resendOTP = useCallback(async (email: string) => {
+    await api.post("/v1/auth/resend-otp/", { email });
   }, []);
 
   const logout = useCallback(() => {
+    clearTokens();
     setUser(null);
     setActiveRole("GUEST");
-  }, []);
-
-  const switchUser = useCallback((userId: string) => {
-    const found = mockUsers.find((u) => u.id === userId);
-    if (found) {
-      setUser(found);
-      setActiveRole(found.roles[0]);
-    }
   }, []);
 
   const switchRole = useCallback((role: UserRole) => {
@@ -78,8 +183,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         kycVerification: {
           ...kyc,
           status,
-          submittedAt: status === "PENDING_REVIEW" ? new Date() : kyc.submittedAt,
-          reviewedAt: status === "APPROVED" || status === "REJECTED" ? new Date() : kyc.reviewedAt,
+          submittedAt:
+            status === "PENDING_REVIEW" ? new Date() : kyc.submittedAt,
+          reviewedAt:
+            status === "APPROVED" || status === "REJECTED"
+              ? new Date()
+              : kyc.reviewedAt,
         },
       };
     });
@@ -91,7 +200,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const templateSteps = prev.roles.includes("OWNER")
         ? KYC_STEPS_OWNER
         : KYC_STEPS_HOST;
-      const existingSteps = prev.kycVerification?.steps ?? templateSteps.map((s) => ({ ...s }));
+      const existingSteps =
+        prev.kycVerification?.steps ?? templateSteps.map((s) => ({ ...s }));
       const updatedSteps: KYCStep[] = existingSteps.map((s) =>
         s.key === stepKey ? { ...s, status: "completed" as const } : s
       );
@@ -105,7 +215,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return {
         ...prev,
         kycStatus: "IN_PROGRESS" as KYCStatus,
-        kycVerification: { ...kyc, status: "IN_PROGRESS" as KYCStatus, steps: updatedSteps },
+        kycVerification: {
+          ...kyc,
+          status: "IN_PROGRESS" as KYCStatus,
+          steps: updatedSteps,
+        },
       };
     });
   }, []);
@@ -116,11 +230,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isLoading,
         login,
+        signup,
+        verifyOTP,
+        resendOTP,
         logout,
         updateKYCStatus,
         completeKYCStep,
         switchRole,
-        switchUser,
         activeRole,
         isKYCComplete,
         isKYCRequired,

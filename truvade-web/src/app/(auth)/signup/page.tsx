@@ -6,25 +6,27 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { User, Mail, Phone } from "lucide-react";
 import { Button, Input, Card } from "@/components/ui";
-
-type Role = "GUEST" | "OWNER";
+import { useAuth } from "@/context/AuthContext";
+import { extractErrorMessage } from "@/lib/api";
+import type { ApiRole } from "@/lib/api-types";
 
 export default function SignupPage() {
   const router = useRouter();
+  const { signup } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [role, setRole] = useState<Role>("GUEST");
+  const [role, setRole] = useState<ApiRole>("GUEST");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validate = () => {
-    const newErrors: Record<string, string> = {};
-    if (!name.trim()) newErrors.name = "Name is required";
-    if (!email.trim()) newErrors.email = "Email is required";
-    if (!phone.trim()) newErrors.phone = "Phone number is required";
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const next: Record<string, string> = {};
+    if (!name.trim()) next.name = "Name is required";
+    if (!email.trim()) next.email = "Email is required";
+    if (!phone.trim()) next.phone = "Phone number is required";
+    setErrors(next);
+    return Object.keys(next).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,12 +34,16 @@ export default function SignupPage() {
     if (!validate()) return;
 
     setLoading(true);
+    setErrors({});
 
-    // Mock signup — simulate brief delay then navigate to verify
-    setTimeout(() => {
+    try {
+      await signup(name.trim(), email.trim(), phone.trim(), role);
+      router.push(`/verify?email=${encodeURIComponent(email.trim())}&mode=signup`);
+    } catch (err) {
+      setErrors({ form: extractErrorMessage(err) });
+    } finally {
       setLoading(false);
-      router.push(`/verify?email=${encodeURIComponent(email)}`);
-    }, 800);
+    }
   };
 
   return (

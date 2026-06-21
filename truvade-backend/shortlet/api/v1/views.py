@@ -12,6 +12,8 @@ from accounts.api.v1.permissions import IsHostRole
 from core.utils.responses import success_response
 from shortlet.domain.selectors import (
     get_available_hosts_for_shortlet,
+    get_public_shortlet,
+    get_public_shortlets,
     get_shortlets_for_host,
     get_shortlets_for_owner,
 )
@@ -272,6 +274,80 @@ class ShortletViewSet(viewsets.ModelViewSet):
         return success_response(
             "Permissions updated.",
             ShortletHostAssignmentSerializer(assignment).data,
+        )
+
+
+@extend_schema(
+    tags=["Public"],
+    summary="List active shortlets (public)",
+    responses=ShortletSerializer(many=True),
+)
+class PublicShortletListView(APIView):
+    permission_classes = []
+    authentication_classes = []
+
+    def get(self, request):
+        qp = request.query_params
+
+        def _decimal(key):
+            val = qp.get(key)
+            if val is None:
+                return None
+            try:
+                from decimal import Decimal
+
+                return Decimal(val)
+            except Exception:
+                return None
+
+        def _int(key):
+            val = qp.get(key)
+            if val is None:
+                return None
+            try:
+                return int(val)
+            except Exception:
+                return None
+
+        def _bool(key):
+            val = qp.get(key)
+            if val is None:
+                return None
+            return val.lower() == "true"
+
+        shortlets = get_public_shortlets(
+            city=qp.get("city") or None,
+            state=qp.get("state") or None,
+            min_price=_decimal("min_price"),
+            max_price=_decimal("max_price"),
+            min_bedrooms=_int("bedrooms"),
+            shortlet_type=qp.get("type") or None,
+            featured=_bool("featured"),
+            guest_favorite=_bool("guest_favorite"),
+            sort_by=qp.get("sort", "newest"),
+        )
+        return success_response(
+            "Shortlets retrieved successfully.",
+            ShortletSerializer(shortlets, many=True).data,
+        )
+
+
+@extend_schema(
+    tags=["Public"],
+    summary="Get a single active shortlet (public)",
+    responses=ShortletSerializer,
+)
+class PublicShortletDetailView(APIView):
+    permission_classes = []
+    authentication_classes = []
+
+    def get(self, request, pk):
+        shortlet = get_public_shortlet(pk=pk)
+        if shortlet is None:
+            raise NotFound("Property not found.")
+        return success_response(
+            "Shortlet retrieved successfully.",
+            ShortletSerializer(shortlet).data,
         )
 
 

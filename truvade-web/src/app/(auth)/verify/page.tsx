@@ -6,13 +6,27 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { Button, Card } from "@/components/ui";
+import { useAuth } from "@/context/AuthContext";
+import { extractErrorMessage } from "@/lib/api";
 
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN = 60;
 
+function redirectForRole(role: string): string {
+  if (role === "OWNER") return "/owner";
+  if (role === "HOST") return "/host";
+  return "/";
+}
+
 export default function VerifyPage() {
   return (
-    <Suspense fallback={<div className="flex justify-center py-12"><div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
+    <Suspense
+      fallback={
+        <div className="flex justify-center py-12">
+          <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
+        </div>
+      }
+    >
       <VerifyContent />
     </Suspense>
   );
@@ -23,11 +37,14 @@ function VerifyContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
 
+  const { verifyOTP, resendOTP } = useAuth();
+
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [countdown, setCountdown] = useState(RESEND_COOLDOWN);
   const [canResend, setCanResend] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
@@ -52,9 +69,7 @@ function VerifyContent() {
       // Handle paste
       const digits = value.slice(0, OTP_LENGTH).split("");
       digits.forEach((digit, i) => {
-        if (index + i < OTP_LENGTH) {
-          newOtp[index + i] = digit;
-        }
+        if (index + i < OTP_LENGTH) newOtp[index + i] = digit;
       });
       setOtp(newOtp);
       const nextIndex = Math.min(index + digits.length, OTP_LENGTH - 1);
@@ -64,7 +79,6 @@ function VerifyContent() {
 
     newOtp[index] = value;
     setOtp(newOtp);
-
     if (value && index < OTP_LENGTH - 1) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -82,32 +96,51 @@ function VerifyContent() {
       setError("Please enter the full verification code");
       return;
     }
+    if (!email) {
+      setError("Email address is missing. Please go back and try again.");
+      return;
+    }
 
     setLoading(true);
     setError("");
 
-    // Mock verification — any 6-digit code works
-    setTimeout(() => {
+    try {
+      const user = await verifyOTP(email, code);
+      router.push(redirectForRole(user.roles[0]));
+    } catch (err) {
+      setError(extractErrorMessage(err));
+      // Clear OTP on failure so user can re-enter
+      setOtp(Array(OTP_LENGTH).fill(""));
+      setTimeout(() => inputRefs.current[0]?.focus(), 50);
+    } finally {
       setLoading(false);
-      router.push("/");
-    }, 800);
-  }, [otp, router]);
+    }
+  }, [otp, email, verifyOTP, router]);
 
+  // Auto-submit when all digits are filled
   useEffect(() => {
     const code = otp.join("");
-    if (code.length === OTP_LENGTH) {
+    if (code.length === OTP_LENGTH && !loading) {
       handleVerify();
     }
-  }, [otp, handleVerify]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [otp]);
 
-  const handleResend = () => {
-    if (!canResend) return;
-    // Mock resend
-    setCountdown(RESEND_COOLDOWN);
-    setCanResend(false);
-    setOtp(Array(OTP_LENGTH).fill(""));
-    setError("");
-    inputRefs.current[0]?.focus();
+  const handleResend = async () => {
+    if (!canResend || !email) return;
+    setResendLoading(true);
+    try {
+      await resendOTP(email);
+      setCountdown(RESEND_COOLDOWN);
+      setCanResend(false);
+      setOtp(Array(OTP_LENGTH).fill(""));
+      setError("");
+      setTimeout(() => inputRefs.current[0]?.focus(), 50);
+    } catch (err) {
+      setError(extractErrorMessage(err));
+    } finally {
+      setResendLoading(false);
+    }
   };
 
   return (
@@ -122,7 +155,7 @@ function VerifyContent() {
             Enter verification code
           </h1>
           <p className="text-gray-500 mt-1">
-            We sent a code to{" "}
+            We sent a 6-digit code to{" "}
             <span className="font-medium text-gray-700">{email}</span>
           </p>
         </div>
@@ -157,9 +190,7 @@ function VerifyContent() {
             ))}
           </div>
 
-          {error && (
-            <p className="text-sm text-error text-center">{error}</p>
-          )}
+          {error && <p className="text-sm text-error text-center">{error}</p>}
 
           <Button type="submit" fullWidth loading={loading} size="lg">
             Verify
@@ -171,16 +202,15 @@ function VerifyContent() {
             {canResend ? (
               <button
                 onClick={handleResend}
-                className="text-primary font-medium hover:underline"
+                disabled={resendLoading}
+                className="text-primary font-medium hover:underline disabled:opacity-50"
               >
-                Resend code
+                {resendLoading ? "Sending…" : "Resend code"}
               </button>
             ) : (
               <>
                 Resend code in{" "}
-                <span className="font-medium text-gray-700">
-                  {countdown}s
-                </span>
+                <span className="font-medium text-gray-700">{countdown}s</span>
               </>
             )}
           </p>

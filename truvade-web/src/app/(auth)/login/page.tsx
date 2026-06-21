@@ -4,18 +4,21 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Mail, Phone, Chrome } from "lucide-react";
+import { Mail } from "lucide-react";
 import { Button, Input, Card } from "@/components/ui";
+import { useAuth } from "@/context/AuthContext";
+import { extractErrorMessage } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) {
+    if (!email.trim()) {
       setError("Please enter your email address");
       return;
     }
@@ -23,11 +26,14 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    // Mock OTP send — simulate brief delay then navigate
-    setTimeout(() => {
+    try {
+      await login(email.trim());
+      router.push(`/verify?email=${encodeURIComponent(email.trim())}&mode=login`);
+    } catch (err) {
+      setError(extractErrorMessage(err));
+    } finally {
       setLoading(false);
-      router.push(`/verify?email=${encodeURIComponent(email)}`);
-    }, 800);
+    }
   };
 
   return (
@@ -65,34 +71,6 @@ export default function LoginPage() {
             Sign up
           </Link>
         </p>
-
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="bg-white px-3 text-gray-400">or continue with</span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <Button
-            variant="outline"
-            fullWidth
-            leftIcon={<Chrome size={18} />}
-            onClick={() => {}}
-          >
-            Google
-          </Button>
-          <Button
-            variant="outline"
-            fullWidth
-            leftIcon={<Phone size={18} />}
-            onClick={() => {}}
-          >
-            Phone
-          </Button>
-        </div>
       </Card>
     </motion.div>
   );
