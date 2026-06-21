@@ -17,13 +17,15 @@ export default function Logo({
   const sizeMap = { sm: 40, md: 48, lg: 72, xl: 80 };
   const taglineSizeClasses = { sm: 'text-[9px]', md: 'text-[10px]', lg: 'text-xs', xl: 'text-sm' };
   const px = sizeMap[size];
+  // Cropped truvade.png is 804×286 — aspect ratio ~2.81:1.
+  const ASPECT = 804 / 286;
 
   return (
     <div className={`flex items-center gap-2.5 ${className}`}>
       <Image
         src="/truvade.png"
         alt="TruVade"
-        width={px * 3.5}
+        width={Math.round(px * ASPECT)}
         height={px}
         className={variant === 'light' ? 'brightness-0 invert' : ''}
         priority
