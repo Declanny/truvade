@@ -103,9 +103,14 @@ async function request<T>(
   const url = `${BASE_URL}${path}`;
   const token = getAccessToken();
   const isFormData = options.body instanceof FormData;
+  // Only set Content-Type when we actually have a JSON body. Setting it on
+  // GETs (or any bodyless request) turns the call into a non-simple CORS
+  // request and forces a preflight, which fails noisily when the server's
+  // CORS config doesn't reply quickly to OPTIONS.
+  const hasJsonBody = !!options.body && !isFormData;
 
   const headers: Record<string, string> = {
-    ...(isFormData ? {} : { "Content-Type": "application/json" }),
+    ...(hasJsonBody ? { "Content-Type": "application/json" } : {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options.headers as Record<string, string>),
   };
