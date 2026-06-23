@@ -464,3 +464,85 @@ export interface ApiThreadDetail {
   thread: ApiThreadSummary;
   messages: ApiMessage[];
 }
+
+// ── Organizations ─────────────────────────────────────────────────────────────
+
+export type ApiOrgBusinessType =
+  | "SOLE"
+  | "LIMITED"
+  | "PARTNERSHIP"
+  | "OTHER";
+
+export type ApiOrgMemberRole =
+  | "OWNER"
+  | "MANAGER"
+  | "HOST"
+  | "COHOST"
+  | "VIEWER";
+
+export type ApiOrgInvitationStatus =
+  | "PENDING"
+  | "ACCEPTED"
+  | "DECLINED"
+  | "EXPIRED"
+  | "REVOKED";
+
+export interface ApiOrganizationMember {
+  id: number;
+  user: number;
+  user_name: string;
+  user_email: string;
+  user_avatar: string | null;
+  role: ApiOrgMemberRole;
+  title: string;
+  is_active: boolean;
+  joined_at: string;
+}
+
+export interface ApiOrganization {
+  id: number;
+  owner: number;
+  name: string;
+  slug: string;
+  business_type: ApiOrgBusinessType;
+  registration_number: string;
+  tax_id: string;
+  contact_email: string;
+  contact_phone: string;
+  website: string;
+  logo: string | null;
+  address: string;
+  country: string;
+  members: ApiOrganizationMember[];
+  member_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApiOrganizationInvitation {
+  id: number;
+  organization: number;
+  organization_name: string;
+  email: string;
+  role: ApiOrgMemberRole;
+  token: string;
+  status: ApiOrgInvitationStatus;
+  invited_by: number | null;
+  invited_by_name: string | null;
+  expires_at: string;
+  created_at: string;
+}
+
+export interface ApiCreateOrganizationPayload {
+  name: string;
+  business_type?: ApiOrgBusinessType;
+  registration_number?: string;
+  tax_id?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  website?: string;
+  address?: string;
+  country?: string;
+}
+
+export type ApiUpdateOrganizationPayload = Partial<ApiCreateOrganizationPayload>;
