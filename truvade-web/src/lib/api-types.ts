@@ -414,3 +414,53 @@ export interface ApiToggleSaveResult {
   saved: boolean;
   shortlet_id: number;
 }
+
+// ── Messaging ─────────────────────────────────────────────────────────────────
+
+export interface ApiThreadParticipant {
+  id: number;
+  user: number;
+  user_name: string;
+  user_email: string;
+  user_avatar: string | null;
+  last_read_at: string | null;
+  is_archived: boolean;
+  is_muted: boolean;
+  joined_at: string;
+}
+
+export interface ApiLastMessage {
+  id: number;
+  sender: number;
+  body: string;
+  created_at: string;
+}
+
+export interface ApiThreadSummary {
+  id: number;
+  subject: string;
+  booking_id: number | null;
+  shortlet_id: number | null;
+  participants: ApiThreadParticipant[];
+  last_message: ApiLastMessage | null;
+  unread_count: number;
+  last_message_at: string | null;
+  created_at: string;
+}
+
+export interface ApiMessage {
+  id: number;
+  thread: number;
+  sender: number;
+  sender_name: string;
+  sender_avatar: string | null;
+  body: string;
+  attachment: string | null;
+  edited_at: string | null;
+  created_at: string;
+}
+
+export interface ApiThreadDetail {
+  thread: ApiThreadSummary;
+  messages: ApiMessage[];
+}
