@@ -367,3 +367,50 @@ export interface ApiCreateReviewPayload {
   check_in_experience?: number | null;
   value?: number | null;
 }
+
+// ── Wishlists ─────────────────────────────────────────────────────────────────
+
+export interface ApiShortletCard {
+  id: number;
+  title: string;
+  city: string;
+  state: string;
+  country: string;
+  base_price: string | null;
+  cleaning_fee: string;
+  currency: string;
+  bedrooms: number;
+  bathrooms: number;
+  max_guests: number;
+  cover_image: string | null;
+  guest_favorite: boolean;
+}
+
+export interface ApiWishlistItem {
+  id: number;
+  shortlet: ApiShortletCard;
+  note: string;
+  added_at: string;
+}
+
+export interface ApiWishlist {
+  id: number;
+  name: string;
+  is_default: boolean;
+  is_private: boolean;
+  items: ApiWishlistItem[];
+  item_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApiRecentlyViewed {
+  id: number;
+  shortlet: ApiShortletCard;
+  viewed_at: string;
+}
+
+export interface ApiToggleSaveResult {
+  saved: boolean;
+  shortlet_id: number;
+}

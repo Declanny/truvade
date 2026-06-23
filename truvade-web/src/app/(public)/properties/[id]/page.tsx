@@ -16,7 +16,8 @@ import { formatCurrency, calculateNights } from "@/lib/types";
 import type { Property } from "@/lib/types";
 import type { ApiAvailability } from "@/lib/api-types";
 import { fetchPublicShortlet } from "@/lib/shortlet-utils";
-import { api } from "@/lib/api";
+import { api, getAccessToken } from "@/lib/api";
+import { recordShortletView } from "@/lib/api-wishlists";
 
 const amenityIcons: Record<string, React.ElementType> = {
   WiFi: Wifi,
@@ -89,6 +90,15 @@ export default function PropertyDetailPage() {
       })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
+  }, [id]);
+
+  // Record the view for authenticated users so the shortlet shows up in
+  // their "Recently viewed" tab. Silent failure — analytics, not critical.
+  useEffect(() => {
+    if (!id || !getAccessToken()) return;
+    const numericId = Number(id);
+    if (!numericId) return;
+    recordShortletView(numericId).catch(() => {});
   }, [id]);
 
   const nights = useMemo(() => {

@@ -1,16 +1,20 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Heart, Clock, LayoutGrid, List, Map, Star, MapPin, BedDouble, Bath, Users, ChevronLeft, ChevronRight } from "lucide-react";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { PropertyMap } from "@/components/property/PropertyMap";
-import { mockProperties } from "@/lib/mock-data";
+import { Skeleton } from "@/components/ui";
 import { formatCurrency } from "@/lib/types";
 import type { Property } from "@/lib/types";
+import { extractErrorMessage } from "@/lib/api";
+import {
+  listRecentlyViewed,
+  listWishlists,
+  shortletCardToProperty,
+  toggleSavedShortlet,
+} from "@/lib/api-wishlists";
 import Link from "next/link";
-
-const recentlyViewed = mockProperties.slice(10, 18);
-const wishlistProperties = mockProperties.slice(0, 6);
 
 type Tab = "recent" | "wishlist";
 type ViewMode = "grid" | "list" | "map";
@@ -222,22 +226,84 @@ function PropertiesMapView({ properties, favorites, onFavorite }: {
 export default function GuestWishlistPage() {
   const [activeTab, setActiveTab] = useState<Tab>("recent");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const [favorites, setFavorites] = useState<Set<string>>(
-    new Set(wishlistProperties.map((p) => p.id))
-  );
+  const [wishlistProperties, setWishlistProperties] = useState<Property[]>([]);
+  const [recentlyViewed, setRecentlyViewed] = useState<Property[]>([]);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const handleFavorite = (propertyId: string) => {
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([listWishlists(), listRecentlyViewed()])
+      .then(([wls, recent]) => {
+        if (cancelled) return;
+        // Flatten all items across the user's wishlists, dedup by shortlet id.
+        const seen = new Set<number>();
+        const saved: Property[] = [];
+        for (const wl of wls) {
+          for (const item of wl.items) {
+            if (seen.has(item.shortlet.id)) continue;
+            seen.add(item.shortlet.id);
+            saved.push(shortletCardToProperty(item.shortlet));
+          }
+        }
+        setWishlistProperties(saved);
+        setRecentlyViewed(
+          recent.map((r) => shortletCardToProperty(r.shortlet))
+        );
+        setFavorites(new Set(saved.map((p) => p.id)));
+      })
+      .catch((err) => {
+        if (!cancelled) setLoadError(extractErrorMessage(err));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleFavorite = async (propertyId: string) => {
+    const numericId = Number(propertyId);
+    if (!numericId) return;
+
+    const wasFavorite = favorites.has(propertyId);
+    // Optimistic update
     setFavorites((prev) => {
       const next = new Set(prev);
-      if (next.has(propertyId)) next.delete(propertyId);
+      if (wasFavorite) next.delete(propertyId);
       else next.add(propertyId);
       return next;
     });
+
+    try {
+      const result = await toggleSavedShortlet(numericId);
+      // Reconcile with server in case of race condition.
+      setFavorites((prev) => {
+        const next = new Set(prev);
+        if (result.saved) next.add(propertyId);
+        else next.delete(propertyId);
+        return next;
+      });
+      // If the user unsaved from the wishlist tab, drop the row from view.
+      if (!result.saved) {
+        setWishlistProperties((prev) => prev.filter((p) => p.id !== propertyId));
+      }
+    } catch {
+      // Rollback on failure
+      setFavorites((prev) => {
+        const next = new Set(prev);
+        if (wasFavorite) next.add(propertyId);
+        else next.delete(propertyId);
+        return next;
+      });
+    }
   };
 
   const visibleWishlist = wishlistProperties.filter((p) => favorites.has(p.id));
   const properties = activeTab === "recent" ? recentlyViewed : visibleWishlist;
-  const isEmpty = properties.length === 0;
+  const isEmpty = !loading && properties.length === 0;
 
   return (
     <div>
@@ -289,7 +355,26 @@ export default function GuestWishlistPage() {
       </div>
 
       {/* Content */}
-      {isEmpty ? (
+      {loadError && !loading && (
+        <div
+          role="alert"
+          className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
+          {loadError}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <div key={i} className="space-y-2">
+              <Skeleton className="aspect-square rounded-xl" />
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-4 w-1/3" />
+            </div>
+          ))}
+        </div>
+      ) : isEmpty ? (
         <div className="text-center py-20">
           <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
             {activeTab === "wishlist" ? <Heart className="w-7 h-7 text-gray-400" /> : <Clock className="w-7 h-7 text-gray-400" />}
