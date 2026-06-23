@@ -1,7 +1,12 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Star, ShieldCheck, MessageSquare } from "lucide-react";
 import { Avatar, Button } from "@/components/ui";
+import { useAuth } from "@/context/AuthContext";
+import { extractErrorMessage, getAccessToken } from "@/lib/api";
+import { startThreadWithUser } from "@/lib/api-messages";
 import type { Property } from "@/lib/types";
 import Link from "next/link";
 
@@ -14,11 +19,39 @@ function hostSlug(name: string): string {
 }
 
 export const HostSection: React.FC<HostSectionProps> = ({ property }) => {
+  const router = useRouter();
+  const { user } = useAuth();
+  const [messaging, setMessaging] = useState(false);
+  const [messageError, setMessageError] = useState<string | null>(null);
+
   const hostAvatarIsUrl = property.hostAvatar?.startsWith("http");
   const hostInitials = hostAvatarIsUrl ? undefined : (property.hostAvatar || property.hostName?.split(" ").map(n => n[0]).join("").toUpperCase() || "T");
   const hostAvatarSrc = hostAvatarIsUrl ? property.hostAvatar : undefined;
   const hostName = property.hostName || "Truvade Managed";
   const hostProfileHref = `/hosts/${hostSlug(hostName)}`;
+
+  // Prefer the assigned host's user ID; fall back to the owner if there's no
+  // host yet (orgId carries the owner ID stringified — see shortlet-utils).
+  const contactUserId = Number(property.hostId || property.orgId);
+  const canMessage = !!contactUserId && contactUserId !== Number(user?.id);
+
+  async function handleMessageHost() {
+    if (!getAccessToken()) {
+      const next = encodeURIComponent(`/properties/${property.id}`);
+      router.push(`/login?next=${next}`);
+      return;
+    }
+    if (!contactUserId) return;
+    setMessaging(true);
+    setMessageError(null);
+    try {
+      await startThreadWithUser(contactUserId);
+      router.push("/account/guest/messages");
+    } catch (err) {
+      setMessageError(extractErrorMessage(err));
+      setMessaging(false);
+    }
+  }
 
   return (
     <div className="py-8 border-b border-gray-200">
@@ -115,15 +148,22 @@ export const HostSection: React.FC<HostSectionProps> = ({ property }) => {
           </div>
 
           {/* Message host button */}
-          <Link href="/account/guest/messages">
+          <div>
             <Button
               variant="outline"
               size="lg"
               leftIcon={<MessageSquare className="w-4 h-4" />}
+              onClick={handleMessageHost}
+              loading={messaging}
+              disabled={!canMessage}
+              title={canMessage ? undefined : "You can't message yourself"}
             >
               Message Host
             </Button>
-          </Link>
+            {messageError && (
+              <p className="mt-2 text-sm text-red-700">{messageError}</p>
+            )}
+          </div>
 
           {/* Safety note */}
           <div className="flex items-start gap-2 mt-6 pt-6 border-t border-gray-200">

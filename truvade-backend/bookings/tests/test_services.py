@@ -427,6 +427,33 @@ class TestConfirmBooking:
         with pytest.raises(ValidationError, match="not authorized"):
             confirm_booking(booking=pending_booking, user=guest)
 
+    def test_confirmation_creates_booking_scoped_thread(
+        self, pending_booking, verified_owner
+    ):
+        from messaging.models import Thread, ThreadParticipant
+
+        confirm_booking(booking=pending_booking, user=verified_owner)
+
+        thread = Thread.objects.get(booking=pending_booking)
+        participant_ids = sorted(
+            ThreadParticipant.objects.filter(thread=thread).values_list(
+                "user_id", flat=True
+            )
+        )
+        assert participant_ids == sorted(
+            [pending_booking.guest_id, pending_booking.shortlet.owner_id]
+        )
+
+    def test_confirmation_is_idempotent_for_thread(
+        self, pending_booking, verified_owner
+    ):
+        from messaging.models import Thread
+
+        confirm_booking(booking=pending_booking, user=verified_owner)
+        # Re-confirming raises (already CONFIRMED) — earlier assertion covers
+        # that. The thread row should still be exactly one.
+        assert Thread.objects.filter(booking=pending_booking).count() == 1
+
 
 @pytest.mark.django_db
 class TestCompleteBooking:

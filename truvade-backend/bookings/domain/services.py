@@ -142,7 +142,29 @@ def confirm_booking(*, booking, user):
 
     booking.status = Booking.Status.CONFIRMED
     booking.save()
+
+    _ensure_booking_thread(booking=booking)
+
     return booking
+
+
+def _ensure_booking_thread(*, booking):
+    """Open a guest <> owner thread scoped to this booking.
+
+    Imported lazily so the bookings app doesn't take a hard import-time
+    dependency on the messaging app. No-ops if the guest also owns the
+    shortlet (avoids self-thread guard) — that pathological case is allowed
+    by booking validation today and shouldn't block confirmation.
+    """
+    owner = booking.shortlet.owner
+    if booking.guest_id == owner.id:
+        return
+
+    from messaging.domain.services import get_or_create_direct_thread
+
+    get_or_create_direct_thread(
+        requester=booking.guest, other_user=owner, booking=booking
+    )
 
 
 @transaction.atomic
