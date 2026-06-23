@@ -58,6 +58,11 @@ INSTALLED_APPS = [
     "shortlet",
     "bookings",
     "payments",
+    "notifications",
+    "reviews",
+    "wishlists",
+    "messaging",
+    "organizations",
 ]
 
 AUTH_USER_MODEL = "accounts.User"
