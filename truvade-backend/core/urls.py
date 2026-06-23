@@ -36,6 +36,7 @@ urlpatterns = [
     path("api/v1/", include("shortlet.api.v1.urls")),
     path("api/v1/", include("bookings.api.v1.urls")),
     path("api/v1/", include("payments.api.v1.urls")),
+    path("api/v1/", include("notifications.api.v1.urls")),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
         "api/docs/",

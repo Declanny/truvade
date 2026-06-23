@@ -26,6 +26,9 @@ export type { AvatarProps } from "./Avatar";
 export { SettingsRow } from "./SettingsRow";
 export type { SettingsRowProps } from "./SettingsRow";
 
+export { Toggle } from "./Toggle";
+export type { ToggleProps } from "./Toggle";
+
 export { StatBar } from "./StatBar";
 export type { StatItem } from "./StatBar";
 

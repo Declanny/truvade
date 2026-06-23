@@ -262,3 +262,46 @@ export interface ApiBank {
   name: string;
   code: string;
 }
+
+// ── Notifications ─────────────────────────────────────────────────────────────
+
+export type ApiNotificationKind =
+  | "BOOKING_REQUESTED"
+  | "BOOKING_CONFIRMED"
+  | "BOOKING_CANCELLED"
+  | "BOOKING_COMPLETED"
+  | "REVIEW_RECEIVED"
+  | "REVIEW_REMINDER"
+  | "MESSAGE_RECEIVED"
+  | "INVITATION_RECEIVED"
+  | "PAYOUT_PROCESSED"
+  | "VERIFICATION_UPDATE"
+  | "GENERAL";
+
+export interface ApiNotification {
+  id: number;
+  kind: ApiNotificationKind;
+  title: string;
+  body: string;
+  data: Record<string, unknown>;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface ApiNotificationPreference {
+  email_bookings: boolean;
+  email_messages: boolean;
+  email_reviews: boolean;
+  email_payouts: boolean;
+  email_marketing: boolean;
+  sms_booking_confirmations: boolean;
+  sms_security: boolean;
+  push_enabled: boolean;
+  push_bookings: boolean;
+  push_messages: boolean;
+  updated_at: string;
+}
+
+export type ApiNotificationPreferencePatch = Partial<
+  Omit<ApiNotificationPreference, "updated_at">
+>;
