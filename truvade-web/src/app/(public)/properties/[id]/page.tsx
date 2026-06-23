@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { Container } from "@/components/layout";
 import { Button, Badge, Card } from "@/components/ui";
-import { PropertyGallery, HostSection, BookingCalendar, PropertyMap } from "@/components/property";
+import { PropertyGallery, HostSection, BookingCalendar, PropertyMap, ReviewsSection } from "@/components/property";
 import { formatCurrency, calculateNights } from "@/lib/types";
 import type { Property } from "@/lib/types";
 import type { ApiAvailability } from "@/lib/api-types";
@@ -230,17 +230,8 @@ export default function PropertyDetailPage() {
             {/* Host */}
             <HostSection property={property} />
 
-            {/* Reviews — placeholder until reviews backend is built */}
-            {property.reviewCount > 0 && (
-              <div className="py-6 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Reviews</h2>
-                <div className="flex items-center gap-3">
-                  <Star className="w-6 h-6 fill-black text-black" />
-                  <span className="text-2xl font-bold">{property.rating?.toFixed(1)}</span>
-                  <span className="text-gray-500">&middot; {property.reviewCount} reviews</span>
-                </div>
-              </div>
-            )}
+            {/* Reviews */}
+            <ReviewsSection shortletId={property.id} />
 
             {/* Map */}
             <div className="py-6">

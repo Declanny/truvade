@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CalendarDays, MapPin, Clock, X, AlertCircle } from "lucide-react";
+import { CalendarDays, MapPin, Clock, AlertCircle } from "lucide-react";
 import { Card, CardBody, Badge, Button } from "@/components/ui";
+import { ReviewFormModal } from "@/components/property";
 import { formatCurrency, formatDate } from "@/lib/types";
 import type { ApiBooking } from "@/lib/api-types";
 import type { BookingStatus } from "@/lib/api-types";
 import { api, extractErrorMessage } from "@/lib/api";
+import { getPendingReviews } from "@/lib/api-reviews";
 import Link from "next/link";
 
 type Tab = "upcoming" | "completed" | "cancelled";
@@ -75,6 +77,12 @@ export default function GuestBookingsPage() {
   const [cancellingId, setCancellingId] = useState<number | null>(null);
   const [cancelError, setCancelError] = useState<Record<number, string>>({});
   const [confirmCancel, setConfirmCancel] = useState<number | null>(null);
+  // Bookings the guest hasn't reviewed yet — used to show "Leave a review" CTA.
+  const [pendingReviewIds, setPendingReviewIds] = useState<Set<number>>(new Set());
+  const [reviewModalFor, setReviewModalFor] = useState<{
+    bookingId: number;
+    shortletTitle: string;
+  } | null>(null);
 
   const fetchBookings = useCallback(async () => {
     setLoading(true);
@@ -89,9 +97,19 @@ export default function GuestBookingsPage() {
     }
   }, []);
 
+  const fetchPending = useCallback(async () => {
+    try {
+      const pending = await getPendingReviews();
+      setPendingReviewIds(new Set(pending.map((p) => p.booking_id)));
+    } catch {
+      // Non-fatal: just means the review CTA stays hidden.
+    }
+  }, []);
+
   useEffect(() => {
     fetchBookings();
-  }, [fetchBookings]);
+    fetchPending();
+  }, [fetchBookings, fetchPending]);
 
   const handleCancel = async (bookingId: number) => {
     setCancellingId(bookingId);
@@ -271,6 +289,20 @@ export default function GuestBookingsPage() {
                               {cancelError[booking.id]}
                             </span>
                           )}
+                          {booking.status === "COMPLETED" &&
+                            pendingReviewIds.has(booking.id) && (
+                              <Button
+                                size="sm"
+                                onClick={() =>
+                                  setReviewModalFor({
+                                    bookingId: booking.id,
+                                    shortletTitle: booking.shortlet.title,
+                                  })
+                                }
+                              >
+                                Leave a review
+                              </Button>
+                            )}
                           {canCancel && (
                             isConfirmingCancel ? (
                               <div className="flex items-center gap-2">
@@ -312,6 +344,24 @@ export default function GuestBookingsPage() {
           )}
         </motion.div>
       </AnimatePresence>
+
+      {reviewModalFor && (
+        <ReviewFormModal
+          isOpen={true}
+          bookingId={reviewModalFor.bookingId}
+          shortletTitle={reviewModalFor.shortletTitle}
+          onClose={() => setReviewModalFor(null)}
+          onSubmitted={() => {
+            const id = reviewModalFor.bookingId;
+            setPendingReviewIds((prev) => {
+              const next = new Set(prev);
+              next.delete(id);
+              return next;
+            });
+            setReviewModalFor(null);
+          }}
+        />
+      )}
     </div>
   );
 }

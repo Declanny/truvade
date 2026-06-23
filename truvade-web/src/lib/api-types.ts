@@ -305,3 +305,65 @@ export interface ApiNotificationPreference {
 export type ApiNotificationPreferencePatch = Partial<
   Omit<ApiNotificationPreference, "updated_at">
 >;
+
+// ── Reviews ───────────────────────────────────────────────────────────────────
+
+export interface ApiReviewReply {
+  id: number;
+  author: number;
+  author_name: string;
+  author_avatar: string | null;
+  body: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApiReview {
+  id: number;
+  booking: number;
+  shortlet: number;
+  guest: number;
+  guest_name: string;
+  guest_avatar: string | null;
+  rating: number;
+  cleanliness: number | null;
+  accuracy: number | null;
+  communication: number | null;
+  location: number | null;
+  check_in_experience: number | null;
+  value: number | null;
+  comment: string;
+  is_published: boolean;
+  reply: ApiReviewReply | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApiRatingSummary {
+  count: number;
+  rating: number | null;
+  cleanliness: number | null;
+  accuracy: number | null;
+  communication: number | null;
+  location: number | null;
+  check_in_experience: number | null;
+  value: number | null;
+}
+
+export interface ApiPendingReview {
+  booking_id: number;
+  shortlet_id: number;
+  shortlet_title: string;
+  check_out: string;
+}
+
+export interface ApiCreateReviewPayload {
+  rating: number;
+  comment?: string;
+  cleanliness?: number | null;
+  accuracy?: number | null;
+  communication?: number | null;
+  location?: number | null;
+  check_in_experience?: number | null;
+  value?: number | null;
+}
