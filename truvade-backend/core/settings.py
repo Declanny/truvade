@@ -79,12 +79,17 @@ MIDDLEWARE = [
 ]
 
 # CORS
+_DEFAULT_CORS_ORIGINS = "http://localhost:3000,https://truvade.vercel.app"
 CORS_ALLOWED_ORIGINS = [
     origin.strip()
-    for origin in os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(
+    for origin in os.environ.get("CORS_ALLOWED_ORIGINS", _DEFAULT_CORS_ORIGINS).split(
         ","
     )
     if origin.strip()
+]
+# Vercel preview deploys have unique hostnames per branch; match them all.
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://truvade-.*\.vercel\.app$",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
